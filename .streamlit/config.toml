@@ -1,0 +1,10 @@
+[theme]
+base = "light"
+primaryColor = "#3E79B3"
+backgroundColor = "#F6F9FC"
+secondaryBackgroundColor = "#3E79B3"   # sidebar blu
+textColor = "#111111"                  # testo nero (anche negli input)
+font = "serif"
+
+[server]
+runOnSave = true
