@@ -41,29 +41,35 @@ section[data-testid="stSidebar"] *:not(input):not(textarea):not(select){ color:#
 aside[aria-label="sidebar"] img{ border-radius:12px; }
 /* Blocchetto brand in alto alla sidebar */
 .sb-brand{ margin-bottom:12px; }
+/* Titolo MENU */
+.sb-title{ font-weight:800; color:#fff; margin:0 0 8px 0; letter-spacing:.3px; }
 
-/* MENU: layout colonna con gap controllato */
-.sidebar-menu{ display:flex; flex-direction:column; gap:6px; }
+/* MENU: colonna senza pillole, spazi ridotti */
+.sidebar-menu{ display:flex; flex-direction:column; gap:4px; }
 .sidebar-menu .nav-item{ margin:0!important; border-bottom:0; }
 .sidebar-menu .stButton{ margin:0!important; padding:0!important; }
 
-/* Bottoni menu: eliminare background/pillole e forzare stile */
-aside[aria-label="sidebar"] .sidebar-menu .stButton>button{
+/* Bottoni menu (override forte) */
+section[data-testid="stSidebar"] .sidebar-menu .stButton>button{
   width:100%; text-align:left; background:transparent!important; background-color:transparent!important;
   color:#fff!important; border:0!important; box-shadow:none!important; outline:none!important; appearance:none!important;
-  padding:4px 10px!important; border-radius:4px!important; line-height:1.15!important; font-size:0.95rem!important;
+  padding:6px 8px!important; border-radius:0!important; line-height:1.15!important; font-size:0.95rem!important;
   font-weight:600!important; filter:none!important; min-height:auto!important;
 }
 /* Hover leggero */
-.sidebar-menu .stButton>button:hover{ background:rgba(255,255,255,.08)!important; }
+section[data-testid="stSidebar"] .sidebar-menu .stButton>button:hover{ background:rgba(255,255,255,.08)!important; }
 /* Attivo: sottolineato + bold pieno */
-.sidebar-menu .nav-item.active .stButton>button{
-  border-bottom:3px solid #fff!important; font-weight:800!important; opacity:1!important;
-}
+.sidebar-menu .nav-item.active .stButton>button{ border-bottom:3px solid #fff!important; font-weight:800!important; opacity:1!important; }
 /* Non attivi: font più leggero/chiaro */
-.sidebar-menu .nav-item:not(.active) .stButton>button{ opacity:.75!important; font-weight:500!important; }
+.sidebar-menu .nav-item:not(.active) .stButton>button{ opacity:.65!important; font-weight:500!important; }
+
+/* Bottone ENTRA (solo login) — ripristino stile */
+section[data-testid="stSidebar"] .login-btn .stButton>button{
+  width:100%; background:var(--navy)!important; color:#fff!important; border:0!important; border-radius:10px!important; padding:10px 16px!important;
+}
 
 /* Etichette bianche per login (non toccano gli input) */
+.s-label{ color:#fff; font-weight:700; margin:8px 0 6px; letter-spacing:.2px; } (non toccano gli input) */
 .s-label{ color:#fff; font-weight:700; margin:8px 0 6px; letter-spacing:.2px; } (non toccano gli input) */
 .s-label{ color:#fff; font-weight:700; margin:8px 0 6px; letter-spacing:.2px; }
 
@@ -444,7 +450,7 @@ def get_current_page():
 def render_sidebar_menu(current):
     with st.sidebar:
         sidebar_brand()
-        st.markdown("### MENU")
+        st.markdown('<div class="sb-title">MENU</div>', unsafe_allow_html=True)
         st.markdown('<div class="sidebar-menu">', unsafe_allow_html=True)
         for i, page in enumerate(PAGES.keys()):
             css = "nav-item active" if page == current else "nav-item"
