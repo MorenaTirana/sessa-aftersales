@@ -55,13 +55,6 @@ div[data-testid="stSidebar"] input, div[data-testid="stSidebar"] textarea{
 aside[aria-label="sidebar"] input::placeholder,
 section[data-testid="stSidebar"] input::placeholder,
 div[data-testid="stSidebar"] input::placeholder{ color:#6B7280!important; opacity:1!important; }
-aside[aria-label="sidebar"] input:-webkit-autofill,
-section[data-testid="stSidebar"] input:-webkit-autofill,
-div[data-testid="stSidebar"] input:-webkit-autofill{
-  -webkit-text-fill-color:#111!important;
-  -webkit-box-shadow:0 0 0 1000px #fff inset!important;
-          box-shadow:inset 0 0 0 1000px #fff!important;
-}
 
 /* Bottone ENTRA (solo login) */
 .login-btn .stButton>button{
@@ -71,11 +64,13 @@ div[data-testid="stSidebar"] input:-webkit-autofill{
 /* MENU in sidebar: compatto, niente sfondo, underline bianca sulla pagina attiva */
 .sidebar-menu .nav-item{ margin:0 0 6px 0 !important; } /* spazi ridotti e uniformi */
 .sidebar-menu .stButton{ margin:0 !important; }
+
 aside[aria-label="sidebar"] .sidebar-menu .stButton>button{
   width:100%; text-align:left; background:transparent!important; color:#fff!important; border:0!important;
   padding:6px 10px!important; margin:0!important; border-radius:8px!important; box-shadow:none!important; font-weight:700!important;
 }
 .sidebar-menu .stButton>button:hover{ background:rgba(255,255,255,.18)!important; } /* hover più visibile */
+
 .sidebar-menu .nav-item{ border-bottom:0; }
 .sidebar-menu .nav-item.active .stButton>button{ border-bottom:3px solid #fff!important; } /* underline pagina attiva sul bottone */
 
@@ -173,8 +168,6 @@ def header():
     )
 
 
-# Helper: logo/brand in alto alla sidebar
-
 def sidebar_brand():
     st.markdown('<div class="sb-brand">', unsafe_allow_html=True)
     if LOGO:
@@ -182,6 +175,7 @@ def sidebar_brand():
     else:
         st.markdown('<h3 style="margin:0;color:#fff">SESSA AFTER SALES</h3>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 # ───────────────────────────── Login ─────────────────────────────
 
@@ -255,7 +249,7 @@ def require_auth() -> bool:
         )
 
         st.markdown('<div class="login-btn">', unsafe_allow_html=True)
-        if st.button("Entra", use_container_width=True):
+        if st.button("Entra", use_container_width=True, key="login_btn"):
             ok = user.strip() == USER and pwd == PASS
             if ok:
                 st.session_state.auth_ok = True
@@ -431,9 +425,25 @@ def render_sidebar_menu(current):
         return
     st.session_state["_nav_rendered"] = True
 
-    render_sidebar_menu(current)
+    with st.sidebar:
+        sidebar_brand()
+        st.markdown("### MENU")
+        st.markdown('<div class="sidebar-menu">', unsafe_allow_html=True)
+        for i, page in enumerate(PAGES.keys()):
+            css = "nav-item active" if page == current else "nav-item"
+            st.markdown(f'<div class="{css}">', unsafe_allow_html=True)
+            if st.button(page, key=f"menu_nav_{i}_{page}"):
+                st.session_state.nav = page
+                try:
+                    st.query_params.update({"nav": page})
+                except Exception:
+                    st.experimental_set_query_params(nav=page)
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
+
+# ───────────────────────────── Main ─────────────────────────────
 
 def main():
     # LOGIN
@@ -442,10 +452,7 @@ def main():
         st.stop()
 
     current = get_current_page()
-
-    # MENU in sidebar (wrapper per lo stile)
     render_sidebar_menu(current)
-        st.markdown("</div>", unsafe_allow_html=True)
 
     # HEADER + CONTENUTO
     header()
@@ -459,5 +466,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
