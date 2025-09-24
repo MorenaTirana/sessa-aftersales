@@ -164,6 +164,33 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
   background-color:#3E79B3;
   height:2px;
 }
+/* 1) Expander: barra molto sottile */
+[data-testid="stExpander"] details > summary{
+  padding-block: 2px !important;     /* ← spessore (2–6px) */
+  min-height: 22px !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* 2) Divider/righe orizzontali: rendile sottili invece che grandi */
+.stDivider,
+div[role="separator"],
+*[data-testid="stHorizontalRule"],
+hr{
+  display:block !important;
+  height: 2px !important;            /* ← spessore linea */
+  background: var(--sessa) !important;
+  margin: 6px 0 !important;
+  border: 0 !important;
+}
+
+/* 3) Card: nessuna “fascia” alta in cima */
+.card{
+  border-radius: 12px !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,.06) !important;
+  background:#fff !important;        /* evita bande piene colorate */
+}
 
 </style>
 """, unsafe_allow_html=True)
