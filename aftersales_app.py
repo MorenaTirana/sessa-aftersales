@@ -329,13 +329,22 @@ def section_boats(conn):
 def section_storico(conn):
     st.subheader("STORICO PRATICHE")
     dfw, dfs = df_read(conn, "wir"), df_read(conn, "spr")
+
     if (dfw is None or dfw.empty) and (dfs is None or dfs.empty):
-        with card(): st.info("Ancora nessuna pratica presente.")
+        with card():
+            st.info("Ancora nessuna pratica presente.")
         return
+
     if dfw is not None and not dfw.empty:
-        st.markdown("### WIR");  with card(): st.dataframe(dfw, use_container_width=True)
+        st.markdown("### WIR")
+        with card():
+            st.dataframe(dfw, use_container_width=True)
+
     if dfs is not None and not dfs.empty:
-        st.markdown("### SPR");  with card(): st.dataframe(dfs, use_container_width=True)
+        st.markdown("### SPR")
+        with card():
+            st.dataframe(dfs, use_container_width=True)
+
 
 # ───────────────────────────── Routing ─────────────────────────────
 PAGES = {
