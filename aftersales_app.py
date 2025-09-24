@@ -1,5 +1,5 @@
-# SESSA After Sales – layout finale (sidebar blu Sessa + logo + menu compatto senza pillole)
-# Solo la pagina attiva è BOLD + UNDERLINE; le altre sono light e NON sottolineate.
+# SESSA After Sales – sidebar blu Sessa + logo + menu compatto (solo pagina attiva bold+underlined)
+# Le altre voci sono "light" e NON sottolineate.
 
 import os, sqlite3, datetime as dt
 import pandas as pd
@@ -33,7 +33,7 @@ st.markdown(
 :root{ --sessa:#3E79B3; --navy:#0b2a4a; --off:#F6F9FC; }
 .stApp, .main .block-container{ background:var(--off)!important; font-family:'Times New Roman', Times, serif!important; }
 
-/* --- SIDEBAR container --- */
+/* --- SIDEBAR --- */
 aside[aria-label="sidebar"], section[data-testid="stSidebar"]{ background:var(--sessa)!important; }
 aside[aria-label="sidebar"] *:not(input):not(textarea):not(select),
 section[data-testid="stSidebar"] *:not(input):not(textarea):not(select){ color:#fff!important; }
@@ -41,12 +41,11 @@ aside[aria-label="sidebar"] img{ border-radius:12px; }
 .sb-brand{ margin-bottom:12px; }
 .sb-title{ font-weight:800; color:#fff; margin:0 0 8px 0; letter-spacing:.3px; }
 
-/* MENU compatto (niente pillole) */
+/* MENU: colonna senza pillole, spazi ridotti */
 .sidebar-menu{ display:flex; flex-direction:column; gap:6px; }
 .sidebar-menu .nav-item{ margin:0!important; border:0; }
 
-/* Link menu – default: niente sottolineatura e font light;
-   NB: lo stile finale è rinforzato inline per sicurezza */
+/* Link menu – default: NO underline e font light; stile finale anche inline */
 aside[aria-label="sidebar"] .sidebar-menu a.menu-item,
 aside[aria-label="sidebar"] .sidebar-menu a.menu-item:link,
 aside[aria-label="sidebar"] .sidebar-menu a.menu-item:visited,
@@ -62,7 +61,7 @@ section[data-testid="stSidebar"] .sidebar-menu a.menu-item:active{
   font-size:0.95rem; line-height:1.15;
 }
 
-/* Bottoni d'azione NEL MAIN (non toccare quelli della sidebar) */
+/* Bottoni nel MAIN */
 [data-testid="stAppViewContainer"] .stButton>button{
   background:var(--navy)!important; color:#fff!important; border:0!important; border-radius:10px!important; padding:10px 16px!important;
 }
@@ -76,7 +75,7 @@ section[data-testid="stSidebar"] .sidebar-menu a.menu-item:active{
 .card{ background:#fff; border-radius:14px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.06); }
 .card.no-bg{ background:transparent; box-shadow:none; padding:0; }
 
-/* Campi nel MAIN: sempre bianchi */
+/* Campi MAIN bianchi */
 [data-testid="stAppViewContainer"] .stTextInput input,
 [data-testid="stAppViewContainer"] .stTextArea textarea,
 [data-testid="stAppViewContainer"] .stNumberInput input,
@@ -90,10 +89,10 @@ section[data-testid="stSidebar"] .sidebar-menu a.menu-item:active{
 /* Divider invisibili */
 hr, .stDivider, div[role="separator"], *[data-testid="stHorizontalRule"]{ display:none!important; height:0!important; }
 
-/* Etichette bianche per login (non toccano gli input) */
+/* Etichette bianche login */
 .s-label{ color:#fff; font-weight:700; margin:8px 0 6px; letter-spacing:.2px; }
 
-/* INPUT LOGIN nella sidebar: bianco/nero sempre */
+/* INPUT LOGIN sidebar */
 aside[aria-label="sidebar"] input, aside[aria-label="sidebar"] textarea,
 section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textarea {
   background:#fff!important; color:#111!important; -webkit-text-fill-color:#111!important; caret-color:#111!important;
@@ -170,10 +169,7 @@ def sidebar_brand():
 
 # ───────────────────────────── Login ─────────────────────────────
 def require_auth() -> bool:
-    """
-    Bypass con ?demo=1 (o env/secret DEMO=1). Se non ci sono APP_USER/APP_PASS → entra senza login (locale).
-    Se ci sono credenziali → chiede user/password in sidebar.
-    """
+    """Bypass con ?demo=1. Se APP_USER/APP_PASS assenti → no login (locale)."""
     def _truthy(x): return str(x).strip().lower() in ("1","true","yes","on")
 
     # BYPASS DEMO
@@ -194,7 +190,7 @@ def require_auth() -> bool:
         st.session_state.auth_user = "demo"
         return True
 
-    # LEGGI CREDENZIALI
+    # CREDENZIALI
     USER = PASS = ""
     try:
         if "APP_USER" in st.secrets: USER = str(st.secrets["APP_USER"]).strip()
@@ -204,19 +200,14 @@ def require_auth() -> bool:
     USER = os.environ.get("APP_USER", USER).strip()
     PASS = os.environ.get("APP_PASS", PASS).strip()
 
-    auth_disabled = (USER == "" and PASS == "")
-
-    # Se non ci sono credenziali → entra subito
-    if auth_disabled:
+    if USER == "" and PASS == "":
         st.session_state.auth_ok = True
         st.session_state.auth_user = "dev"
         return True
 
-    # Già autenticato?
     if st.session_state.get("auth_ok"):
         return True
 
-    # UI LOGIN
     with st.sidebar:
         sidebar_brand()
         st.markdown("### 🔐 Accesso")
@@ -225,22 +216,18 @@ def require_auth() -> bool:
         st.markdown('<div class="s-label">Password</div>', unsafe_allow_html=True)
         pwd  = st.text_input("Password", placeholder="password", type="password", key="login_pass", label_visibility="collapsed")
 
-        st.markdown('<div class="login-btn">', unsafe_allow_html=True)
         if st.button("Entra", use_container_width=True, key="login_btn"):
-            ok = (user.strip() == USER and pwd == PASS)
-            if ok:
-                st.session_state.auth_ok  = True
+            if user.strip() == USER and pwd == PASS:
+                st.session_state.auth_ok = True
                 st.session_state.auth_user = user.strip() or "guest"
                 try: st.rerun()
                 except Exception: st.experimental_rerun()
             else:
                 st.error("Credenziali errate.")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        st.caption("🔒 Autenticazione: ATTIVA | bypass: aggiungi ?demo=1 alla URL")
+        st.caption("🔒 Autenticazione: ATTIVA | bypass: ?demo=1")
     return False
 
-# ───────────────────────────── Sezioni (placeholder funzionali) ─────────────────────────────
+# ───────────────────────────── Sezioni ─────────────────────────────
 def section_wir(conn):
     st.subheader("⚓ Warranty Intervention Requests (WIR)")
     st.markdown("### DATI")
@@ -258,15 +245,12 @@ def section_wir(conn):
         c3 = st.columns(2)
         c3[0].text_input("Locazione barca", key="wir_loc")
         c3[1].text_input("Contatto a bordo", key="wir_onboard")
-
     st.markdown("### RICHIESTE")
     with card():
         with st.expander("Richiesta 1", expanded=True):
             st.text_area("Descrizione *", key="wir_desc_1")
-            st.file_uploader(
-                "Foto (una o più)", type=["png","jpg","jpeg"], accept_multiple_files=True, key="wir_ph_1"
-            )
-            cc2  = st.columns(2)
+            st.file_uploader("Foto (una o più)", type=["png","jpg","jpeg"], accept_multiple_files=True, key="wir_ph_1")
+            cc2 = st.columns(2)
             cc2[0].text_input("Marchio", key="wir_brand_1")
             cc2[1].text_input("Articolo / N. Serie", key="wir_item_1")
 
@@ -288,22 +272,56 @@ def section_spr(conn):
         c3[0].text_input("Locazione barca", key="spr_loc")
         c3[1].text_input("Contatto a bordo", key="spr_onboard")
 
-def section_clienti(conn):  st.subheader("CLIENTI");             with card(): st.write("Anagrafica Clienti.")
-def section_dealer(conn):   st.subheader("DEALER");              with card(): st.write("Anagrafica Dealer.")
-def section_ddt033(conn):   st.subheader("DOCUMENTI GARANZIE");  with card(): st.write("Documenti Garanzie.")
-def section_ddt006(conn):   st.subheader("DOCUMENTI VENDITE");   with card(): st.write("Documenti Vendite.")
-def section_quotes_invoices(conn): st.subheader("€ RIPARAZIONI"); with card(): st.write("Preventivi / Fatture.")
-def section_trips(conn):    st.subheader("TRASFERTE");           with card(): st.write("Trasferte.")
-def section_boats(conn):    st.subheader("BARCHE");              with card(): st.write("Archivio barche.")
+def section_clienti(conn):
+    st.subheader("CLIENTI")
+    with card():
+        st.write("Anagrafica Clienti.")
+
+def section_dealer(conn):
+    st.subheader("DEALER")
+    with card():
+        st.write("Anagrafica Dealer.")
+
+def section_ddt033(conn):
+    st.subheader("DOCUMENTI GARANZIE")
+    with card():
+        st.write("Documenti Garanzie.")
+
+def section_ddt006(conn):
+    st.subheader("DOCUMENTI VENDITE")
+    with card():
+        st.write("Documenti Vendite.")
+
+def section_quotes_invoices(conn):
+    st.subheader("€ RIPARAZIONI")
+    with card():
+        st.write("Preventivi / Fatture.")
+
+def section_trips(conn):
+    st.subheader("TRASFERTE")
+    with card():
+        st.write("Trasferte.")
+
+def section_boats(conn):
+    st.subheader("BARCHE")
+    with card():
+        st.write("Archivio barche.")
+
 def section_storico(conn):
     st.subheader("STORICO PRATICHE")
     dfw, dfs = df_read(conn, "wir"), df_read(conn, "spr")
     if (dfw is None or dfw.empty) and (dfs is None or dfs.empty):
-        with card(): st.info("Ancora nessuna pratica presente."); return
+        with card():
+            st.info("Ancora nessuna pratica presente.")
+        return
     if dfw is not None and not dfw.empty:
-        st.markdown("### WIR");  with card(): st.dataframe(dfw, use_container_width=True)
+        st.markdown("### WIR")
+        with card():
+            st.dataframe(dfw, use_container_width=True)
     if dfs is not None and not dfs.empty:
-        st.markdown("### SPR");  with card(): st.dataframe(dfs, use_container_width=True)
+        st.markdown("### SPR")
+        with card():
+            st.dataframe(dfs, use_container_width=True)
 
 # ───────────────────────────── Routing ─────────────────────────────
 PAGES = {
@@ -332,8 +350,10 @@ def get_current_page():
     if current not in PAGES:
         current = keys[0]
         st.session_state.nav = current
-        try: st.query_params.update({"nav": current})
-        except Exception: st.experimental_set_query_params(nav=current)
+        try:
+            st.query_params.update({"nav": current})
+        except Exception:
+            st.experimental_set_query_params(nav=current)
     return current
 
 def render_sidebar_menu(current):
@@ -341,10 +361,8 @@ def render_sidebar_menu(current):
 
     def _query_dict():
         try:
-            # Streamlit >= 1.32
             return dict(st.query_params)
         except Exception:
-            # Fallback
             return {k: (v[0] if isinstance(v, list) else v) for k, v in st.experimental_get_query_params().items()}
 
     def _href_for(page: str) -> str:
@@ -358,7 +376,6 @@ def render_sidebar_menu(current):
         st.markdown('<div class="sidebar-menu">', unsafe_allow_html=True)
         for page in PAGES.keys():
             active = (page == current)
-            # Stile inline → garantisce: attiva = bold+underline; non attiva = light, no underline
             style_active   = "font-weight:800;opacity:1;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:3px;"
             style_inactive = "font-weight:300;opacity:.70;text-decoration:none;"
             style = style_active if active else style_inactive
@@ -388,6 +405,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
