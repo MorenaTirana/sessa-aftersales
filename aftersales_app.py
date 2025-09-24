@@ -127,14 +127,16 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
   background:#fff!important; color:#111!important; -webkit-text-fill-color:#111!important; caret-color:#111!important;
   border:1px solid #d0d6df!important; border-radius:10px!important; box-shadow:none!important;
 }
+st.markdown("""
 
-/* Alza il blocco blu (riduce lo spazio bianco sopra) */
+
+/* Alza il blocco blu e allinealo al logo */
 [data-testid="stAppViewContainer"] .main .block-container{
-  padding-top: -8px !important;   /* prova 0–16px per regolare finemente */
+  padding-top: 0 !important;
 }
-
-/* (facoltativo) assicura che il blocco blu non aggiunga altro spazio sopra */
-.brand{ margin-top: 0 !important; }
+.brand{
+  margin-top: -24px !important;   /* prova -20 / -24 / -28 per centrare perfettamente */
+}
 
 </style>
 """,
