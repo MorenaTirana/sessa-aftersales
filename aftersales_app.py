@@ -39,7 +39,7 @@ st.set_page_config(page_title="SESSA After Sales", page_icon=_page_icon(), layou
 st.markdown(
     """
 <style>
-:root{ --sessa:#3E79B3; --navy:#0b2a4a; --off:#F6F9FC; --sb-logo-top:10px; --brand-h:150px; }
+:root{ --sessa:#3E79B3; --navy:#0b2a4a; --off:#F6F9FC; --sb-logo-top:5px; --brand-h:150px; }
 .stApp, .main .block-container{ background:var(--off)!important; font-family:'Times New Roman', Times, serif!important; }
 
 /* --- SIDEBAR --- */
