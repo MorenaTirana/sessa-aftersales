@@ -108,7 +108,7 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
 }
 /* Abbassa solo il logo in sidebar */
 
-aside[aria-label="sidebar"] .sb-brand{ margin-top:20% !important; }
+aside[aria-label="sidebar"] .sb-brand{ margin-top:25% !important; }
 
 </style>
 """,
