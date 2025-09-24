@@ -111,7 +111,7 @@ section[data-testid="stSidebar"] .sidebar-menu a.menu-item:active{
 .brand-text h1{ margin:0; line-height:1; }
 .brand-text small{
   margin:0; line-height:1.05;
-  position:relative; top:-9px;   /* ← alza il sottotitolo; prova -4 / -8 se vuoi */
+  position:relative; top:-12px;   /* ← alza il sottotitolo; prova -4 / -8 se vuoi */
   opacity:.95;
 }
 
