@@ -39,6 +39,8 @@ aside[aria-label="sidebar"], section[data-testid="stSidebar"]{ background:var(--
 aside[aria-label="sidebar"] *:not(input):not(textarea):not(select),
 section[data-testid="stSidebar"] *:not(input):not(textarea):not(select){ color:#fff!important; }  /* testi bianchi, NON gli input */
 aside[aria-label="sidebar"] img{ border-radius:12px; }
+/* Blocchetto brand in alto alla sidebar */
+.sb-brand{ margin-bottom:12px; }
 
 /* Etichette bianche per login (non toccano gli input) */
 .s-label{ color:#fff; font-weight:700; margin:8px 0 6px; letter-spacing:.2px; }
@@ -170,6 +172,16 @@ def header():
     )
 
 
+# Helper: logo/brand in alto alla sidebar
+
+def sidebar_brand():
+    st.markdown('<div class="sb-brand">', unsafe_allow_html=True)
+    if LOGO:
+        st.image(LOGO, use_container_width=True)
+    else:
+        st.markdown('<h3 style="margin:0;color:#fff">SESSA AFTER SALES</h3>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
 # ───────────────────────────── Login ─────────────────────────────
 
 def require_auth() -> bool:
@@ -230,8 +242,7 @@ def require_auth() -> bool:
 
     # --- 3) UI LOGIN (sidebar) ---
     with st.sidebar:
-        if LOGO:
-            st.image(LOGO, use_container_width=True)
+        sidebar_brand()
         st.markdown("### 🔐 Accesso")
         st.markdown('<div class="s-label">User</div>', unsafe_allow_html=True)
         user = st.text_input(
@@ -423,6 +434,7 @@ def main():
 
     # MENU in sidebar (wrapper per lo stile)
     with st.sidebar:
+        sidebar_brand()
         st.markdown("### MENU")
         st.markdown('<div class="sidebar-menu">', unsafe_allow_html=True)
         for page in PAGES.keys():
