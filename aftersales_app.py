@@ -1,7 +1,8 @@
 # SESSA After Sales – sidebar blu Sessa + logo + menu compatto
 # Solo la pagina attiva è BOLD + UNDERLINE; le altre sono light e NON sottolineate.
+# Logo allineato in altezza con il blocco "SESSA AFTER SALES" e mostrato davanti al titolo nel main.
 
-import os, sqlite3, datetime as dt
+import os, sqlite3, datetime as dt, base64
 import pandas as pd
 import streamlit as st
 from PIL import Image
@@ -24,14 +25,21 @@ def _page_icon():
         pass
     return "⚓"
 
+def _logo_data_uri():
+    if not LOGO: return ""
+    try:
+        with open(LOGO, "rb") as f:
+            return "data:image/png;base64," + base64.b64encode(f.read()).decode("utf-8")
+    except Exception:
+        return ""
+
 st.set_page_config(page_title="SESSA After Sales", page_icon=_page_icon(), layout="wide")
 
 # ───────────────────────────── CSS ─────────────────────────────
 st.markdown(
     """
-
 <style>
-:root{ --sessa:#3E79B3; --navy:#0b2a4a; --off:#F6F9FC; }
+:root{ --sessa:#3E79B3; --navy:#0b2a4a; --off:#F6F9FC; --sb-logo-top:14px; }  /* ← micro-tuning altezza logo */
 .stApp, .main .block-container{ background:var(--off)!important; font-family:'Times New Roman', Times, serif!important; }
 
 /* --- SIDEBAR --- */
@@ -40,11 +48,11 @@ aside[aria-label="sidebar"] *:not(input):not(textarea):not(select),
 section[data-testid="stSidebar"] *:not(input):not(textarea):not(select){ color:#fff!important; }
 aside[aria-label="sidebar"] img{ border-radius:12px; }
 
-/* Logo: resta dov'è; margine standard sotto il logo */
-.sb-brand{ margin-bottom:12px; }
+/* Logo: resta dov'è ma lo abbassiamo/innalziamo finemente con --sb-logo-top */
+.sb-brand{ margin-top:var(--sb-logo-top)!important; margin-bottom:12px; }
 
-/* SOLO il blocco (MENU + lista) scende più in basso rispetto al logo */
-.sb-menu-wrap{ margin-top:120px !important; }  /* ← regola lo spazio qui (es. 56/64) */
+/* SOLO il blocco (MENU + lista) scende rispetto al logo */
+.sb-menu-wrap{ margin-top:96px !important; }  /* regola lo spazio logo→menu */
 
 /* Titolo MENU */
 .sb-title{ font-weight:800; color:#fff; margin:0 0 8px 0; letter-spacing:.3px; }
@@ -74,8 +82,10 @@ section[data-testid="stSidebar"] .sidebar-menu a.menu-item:active{
   background:var(--navy)!important; color:#fff!important; border:0!important; border-radius:10px!important; padding:10px 16px!important;
 }
 
-/* Header card */
+/* ===== Header brand nel MAIN (con logo a sinistra) ===== */
 .brand{ background:#3E79B3; color:#fff; border-radius:14px; padding:14px 16px; margin-bottom:18px; }
+.brand-row{ display:flex; align-items:center; gap:12px; }
+.brand-logo{ height:48px; width:auto; border-radius:8px; display:block; }
 .brand h1{ color:#fff!important; margin:0; }
 .brand small{ color:#fff!important; opacity:.95; }
 
@@ -106,10 +116,6 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
   background:#fff!important; color:#111!important; -webkit-text-fill-color:#111!important; caret-color:#111!important;
   border:1px solid #d0d6df!important; border-radius:10px!important; box-shadow:none!important;
 }
-/* Abbassa solo il logo in sidebar */
-
-aside[aria-label="sidebar"] .sb-brand{ margin-top:130px !important; }
-
 </style>
 """,
     unsafe_allow_html=True,
@@ -166,8 +172,21 @@ def card(cls: str = ""):
         st.markdown("</div>", unsafe_allow_html=True)
 
 def header():
+    """Header blu con logo a sinistra del testo."""
+    logo_uri = _logo_data_uri()
+    img_html = f'<img class="brand-logo" src="{logo_uri}" alt="logo"/>' if logo_uri else ""
     st.markdown(
-        '<div class="brand"><h1>SESSA AFTER SALES</h1><small>After Sales Dashboard</small></div>',
+        f'''
+        <div class="brand">
+          <div class="brand-row">
+            {img_html}
+            <div>
+              <h1>SESSA AFTER SALES</h1>
+              <small>After Sales Dashboard</small>
+            </div>
+          </div>
+        </div>
+        ''',
         unsafe_allow_html=True,
     )
 
@@ -384,8 +403,7 @@ def render_sidebar_menu(current):
 
     with st.sidebar:
         sidebar_brand()
-        # WRAPPER che spinge in basso solo il blocco "MENU + lista"
-        st.markdown('<div class="sb-menu-wrap">', unsafe_allow_html=True)
+        st.markdown('<div class="sb-menu-wrap">', unsafe_allow_html=True)  # solo il menu va più giù
         st.markdown('<div class="sb-title">MENU</div>', unsafe_allow_html=True)
         st.markdown('<div class="sidebar-menu">', unsafe_allow_html=True)
         for page in PAGES.keys():
@@ -420,7 +438,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
 
