@@ -538,6 +538,7 @@ def section_wir(conn):
 def section_spr(conn):
     st.subheader("🛠️ Spare Parts Request (SPR)")
 
+    # — DATI INTESTAZIONE —
     st.markdown("### DATI")
     with card("no-bg"):
         c = st.columns(4)
@@ -561,6 +562,144 @@ def section_spr(conn):
         c3 = st.columns(2)
         c3[0].text_input("Locazione barca", key="spr_loc")
         c3[1].text_input("Contatto a bordo", key="spr_onboard")
+
+    # — RICHIESTE DINAMICHE —
+    if "spr_nreq" not in st.session_state:
+        st.session_state.spr_nreq = 1
+
+    st.markdown("### RICHIESTE")
+    save_clicked = False
+    with card("no-bg"):
+        for i in range(1, st.session_state.spr_nreq + 1):
+            with st.expander(f"Richiesta {i}", expanded=(i == 1)):
+                st.text_area("Descrizione *", key=f"spr_desc_{i}")
+                st.file_uploader(
+                    "Foto (una o più)",
+                    type=["png", "jpg", "jpeg"],
+                    accept_multiple_files=True,
+                    key=f"spr_ph_{i}",
+                )
+                c_line = st.columns(2)
+                c_line[0].text_input("Marchio", key=f"spr_brand_{i}")
+                c_line[1].text_input("Articolo / N. Serie", key=f"spr_item_{i}")
+
+        # Aggiungi nuova richiesta (sinistra)
+        st.button(
+            "➕ Aggiungi Richiesta",
+            key="spr_add",
+            on_click=lambda: st.session_state.update(spr_nreq=st.session_state.spr_nreq + 1),
+        )
+
+        # Spazio + bottone SALVA centrato
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+        left, center, right = st.columns([3, 2, 3])
+        save_clicked = center.button("💾 Salva & Genera Modulo", key="spr_save")
+
+    # — SALVA & GENERA MODULO —
+    if save_clicked:
+        errors = []
+        fullname   = (st.session_state.get("spr_fullname") or "").strip()
+        dealer     = (st.session_state.get("spr_dealer") or "").strip()
+        email      = (st.session_state.get("spr_email") or "").strip()
+        phone      = (st.session_state.get("spr_phone") or "").strip()
+        boat_model = (st.session_state.get("spr_boat_model") or "").strip()
+        hull       = (st.session_state.get("spr_hull") or "").strip()
+        loc        = (st.session_state.get("spr_loc") or "").strip()
+        onboard    = (st.session_state.get("spr_onboard") or "").strip()
+
+        if not fullname:   errors.append("Nome & Cognome")
+        if not dealer:     errors.append("Dealer")
+        if not email:      errors.append("E-mail")
+        if not phone:      errors.append("Cellulare")
+        if not boat_model: errors.append("Modello di barca")
+        if not hull:       errors.append("Matricola nr")
+
+        richieste = []
+        for i in range(1, st.session_state.spr_nreq + 1):
+            desc  = (st.session_state.get(f"spr_desc_{i}") or "").strip()
+            brand = (st.session_state.get(f"spr_brand_{i}") or "").strip()
+            item  = (st.session_state.get(f"spr_item_{i}") or "").strip()
+            photos = st.session_state.get(f"spr_ph_{i}")  # lista di UploadedFile
+            if desc or brand or item or photos:
+                if not desc:
+                    errors.append(f"Descrizione richiesta {i}")
+                richieste.append((i, desc, brand, item, photos))
+
+        if not richieste:
+            errors.append("Almeno una richiesta compilata")
+
+        if errors:
+            st.error("Compila i campi obbligatori: " + ", ".join(errors))
+            st.stop()
+
+        # Salvataggio DB: 1 riga per ogni richiesta (tabella spr)
+        now = dt.datetime.now().isoformat(timespec="seconds")
+        saved_count = 0
+        for i, desc, brand, item, photos in richieste:
+            _save_uploaded_files(photos, UPLOADS, f"spr_{i}")
+            run_sql(
+                conn,
+                """INSERT INTO spr(
+                    created_at, dealer, boat, description, item_brand, item_serial,
+                    full_name, email, phone, boat_model, hull_serial,
+                    boat_location, onboard_contact
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                [
+                    now, dealer, "", desc, brand, item,
+                    fullname, email, phone, boat_model, hull,
+                    loc, onboard
+                ],
+            )
+            saved_count += 1
+
+        # Modulo HTML scaricabile
+        rows_html = []
+        for i, desc, brand, item, _ in richieste:
+            rows_html.append(
+                f"<tr><td style='padding:6px 8px;border:1px solid #ccc'>{i}</td>"
+                f"<td style='padding:6px 8px;border:1px solid #ccc'>{brand or '-'}</td>"
+                f"<td style='padding:6px 8px;border:1px solid #ccc'>{item or '-'}</td>"
+                f"<td style='padding:6px 8px;border:1px solid #ccc'>{desc}</td></tr>"
+            )
+        html = f"""
+        <html><head><meta charset="utf-8" /><title>Modulo SPR</title></head>
+        <body style="font-family:Arial,Helvetica,sans-serif">
+          <h2 style="margin:0 0 8px">SESSA – Spare Parts Request</h2>
+          <div style="margin:0 0 12px;color:#444">{now}</div>
+          <h3 style="margin:16px 0 6px">Dati Cliente/Barca</h3>
+          <table style="border-collapse:collapse;font-size:14px">
+            <tr><td><b>Nome</b></td><td>{fullname}</td></tr>
+            <tr><td><b>Dealer</b></td><td>{dealer}</td></tr>
+            <tr><td><b>E-mail</b></td><td>{email}</td></tr>
+            <tr><td><b>Cellulare</b></td><td>{phone}</td></tr>
+            <tr><td><b>Modello barca</b></td><td>{boat_model}</td></tr>
+            <tr><td><b>Matricola</b></td><td>{hull}</td></tr>
+            <tr><td><b>Locazione</b></td><td>{loc}</td></tr>
+            <tr><td><b>Contatto a bordo</b></td><td>{onboard}</td></tr>
+          </table>
+
+          <h3 style="margin:18px 0 6px">Richieste</h3>
+          <table style="border-collapse:collapse;font-size:14px">
+            <thead>
+              <tr>
+                <th style="padding:6px 8px;border:1px solid #ccc;text-align:left">#</th>
+                <th style="padding:6px 8px;border:1px solid #ccc;text-align:left">Marchio</th>
+                <th style="padding:6px 8px;border:1px solid #ccc;text-align:left">Articolo / N. Serie</th>
+                <th style="padding:6px 8px;border:1px solid #ccc;text-align:left">Descrizione</th>
+              </tr>
+            </thead>
+            <tbody>{''.join(rows_html)}</tbody>
+          </table>
+        </body></html>
+        """.encode("utf-8")
+
+        st.success(f"✅ Salvate {saved_count} richieste SPR su database.")
+        st.download_button(
+            "⬇️ Scarica Modulo SPR (HTML)",
+            data=html,
+            file_name=f"Modulo_SPR_{dt.date.today().isoformat()}.html",
+            mime="text/html",
+        )
 
 def section_clienti(conn):
     st.subheader("CLIENTI")
