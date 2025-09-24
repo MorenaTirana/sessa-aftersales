@@ -215,6 +215,15 @@ hr{
   padding: 0 !important;
   min-height: 0 !important;
 }
+/* Niente barra/riempimento per gli expander */
+[data-testid="stExpander"] details,
+[data-testid="stExpander"] details > summary{
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+}
 
 </style>
 """, unsafe_allow_html=True)
@@ -366,7 +375,7 @@ def section_wir(conn):
 
     # — DATI INTESTAZIONE —
     st.markdown("### DATI")
-    with card():
+    with card(no-bg):
         c = st.columns(4)
         c[0].date_input("Data", dt.date.today(), key="wir_date")
         c[1].text_input("Nome & Cognome *", key="wir_fullname")
@@ -384,7 +393,7 @@ def section_wir(conn):
     # — RICHIESTE DINAMICHE —
     st.markdown("### RICHIESTE")
     save_clicked = False
-    with card():
+    with card(no-bg):
         for i in range(1, st.session_state.wir_nreq + 1):
             with st.expander(f"Richiesta {i}", expanded=(i == 1)):
                 st.text_area("Descrizione *", key=f"wir_desc_{i}")
