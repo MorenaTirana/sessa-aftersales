@@ -29,7 +29,6 @@ st.set_page_config(page_title="SESSA After Sales", page_icon=_page_icon(), layou
 # ───────────────────────────── CSS ─────────────────────────────
 st.markdown(
     """
-    aside[aria-label="sidebar"] .sb-brand{ margin-top:clamp(12px, 2.5vh, 32px) !important; }
 
 <style>
 :root{ --sessa:#3E79B3; --navy:#0b2a4a; --off:#F6F9FC; }
@@ -107,6 +106,8 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
   background:#fff!important; color:#111!important; -webkit-text-fill-color:#111!important; caret-color:#111!important;
   border:1px solid #d0d6df!important; border-radius:10px!important; box-shadow:none!important;
 }
+aside[aria-label="sidebar"] .sb-brand{ margin-top:clamp(12px, 2.5vh, 32px) !important; }
+
 </style>
 """,
     unsafe_allow_html=True,
