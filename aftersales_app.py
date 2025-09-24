@@ -45,23 +45,16 @@ aside[aria-label="sidebar"] img{ border-radius:12px; }
 .sb-title{ font-weight:800; color:#fff; margin:0 0 8px 0; letter-spacing:.3px; }
 
 /* MENU: colonna senza pillole, spazi ridotti */
-.sidebar-menu{ display:flex; flex-direction:column; gap:4px; }
-.sidebar-menu .nav-item{ margin:0!important; border-bottom:0; }
-.sidebar-menu .stButton{ margin:0!important; padding:0!important; }
+.sidebar-menu{ display:flex; flex-direction:column; gap:6px; }
+.sidebar-menu .nav-item{ margin:0!important; border:0; }
 
-/* Bottoni menu (override forte) */
-section[data-testid="stSidebar"] .sidebar-menu .stButton>button{
-  width:100%; text-align:left; background:transparent!important; background-color:transparent!important;
-  color:#fff!important; border:0!important; box-shadow:none!important; outline:none!important; appearance:none!important;
-  padding:6px 8px!important; border-radius:0!important; line-height:1.15!important; font-size:0.95rem!important;
-  font-weight:600!important; filter:none!important; min-height:auto!important;
+/* Link voci menu (niente pillole) */
+.sidebar-menu a.menu-item{
+  display:block; padding:6px 8px; text-decoration:none; color:#fff!important; border:0; border-radius:0;
+  font-size:0.95rem; line-height:1.15; font-weight:500; opacity:.65;
 }
-/* Hover leggero */
-section[data-testid="stSidebar"] .sidebar-menu .stButton>button:hover{ background:rgba(255,255,255,.08)!important; }
-/* Attivo: sottolineato + bold pieno */
-.sidebar-menu .nav-item.active .stButton>button{ border-bottom:3px solid #fff!important; font-weight:800!important; opacity:1!important; }
-/* Non attivi: font più leggero/chiaro */
-.sidebar-menu .nav-item:not(.active) .stButton>button{ opacity:.65!important; font-weight:500!important; }
+.sidebar-menu a.menu-item:hover{ background:rgba(255,255,255,.08); }
+.sidebar-menu a.menu-item.active{ opacity:1; font-weight:800; border-bottom:3px solid #fff; }
 
 /* Bottone ENTRA (solo login) — ripristino stile */
 section[data-testid="stSidebar"] .login-btn .stButton>button{
@@ -69,7 +62,7 @@ section[data-testid="stSidebar"] .login-btn .stButton>button{
 }
 
 /* Etichette bianche per login (non toccano gli input) */
-.s-label{ color:#fff; font-weight:700; margin:8px 0 6px; letter-spacing:.2px; } (non toccano gli input) */
+.s-label{ color:#fff; font-weight:700; margin:8px 0 6px; letter-spacing:.2px; } color:#fff; font-weight:700; margin:8px 0 6px; letter-spacing:.2px; } (non toccano gli input) */
 .s-label{ color:#fff; font-weight:700; margin:8px 0 6px; letter-spacing:.2px; } (non toccano gli input) */
 .s-label{ color:#fff; font-weight:700; margin:8px 0 6px; letter-spacing:.2px; }
 
@@ -448,21 +441,27 @@ def get_current_page():
 
 
 def render_sidebar_menu(current):
+    from urllib.parse import urlencode
+
+    def _query_dict():
+        try:
+            qp = dict(st.query_params)
+        except Exception:
+            qp = {k: (v[0] if isinstance(v, list) else v) for k, v in st.experimental_get_query_params().items()}
+        return qp
+
+    def _href_for(page: str) -> str:
+        q = _query_dict()
+        q["nav"] = page
+        return "?" + urlencode(q)
+
     with st.sidebar:
         sidebar_brand()
         st.markdown('<div class="sb-title">MENU</div>', unsafe_allow_html=True)
         st.markdown('<div class="sidebar-menu">', unsafe_allow_html=True)
-        for i, page in enumerate(PAGES.keys()):
-            css = "nav-item active" if page == current else "nav-item"
-            st.markdown(f'<div class="{css}">', unsafe_allow_html=True)
-            if st.button(page, key=f"menu_nav_{i}_{page}"):
-                st.session_state.nav = page
-                try:
-                    st.query_params.update({"nav": page})
-                except Exception:
-                    st.experimental_set_query_params(nav=page)
-                st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
+        for page in PAGES.keys():
+            active = "active" if page == current else ""
+            st.markdown(f'<div class="nav-item"><a class="menu-item {active}" href="{_href_for(page)}">{page}</a></div>', unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
 
