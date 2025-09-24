@@ -39,8 +39,11 @@ aside[aria-label="sidebar"] *:not(input):not(textarea):not(select),
 section[data-testid="stSidebar"] *:not(input):not(textarea):not(select){ color:#fff!important; }
 aside[aria-label="sidebar"] img{ border-radius:12px; }
 
-/* Spazio sotto il logo (molto più ampio) */
-.sb-brand{ margin-bottom:96px !important; }
+/* Logo: resta dov'è; margine standard sotto il logo */
+.sb-brand{ margin-bottom:12px; }
+
+/* SOLO il blocco (MENU + lista) scende più in basso rispetto al logo */
+.sb-menu-wrap{ margin-top:48px !important; }  /* ← regola lo spazio qui (es. 56/64) */
 
 /* Titolo MENU */
 .sb-title{ font-weight:800; color:#fff; margin:0 0 8px 0; letter-spacing:.3px; }
@@ -376,6 +379,8 @@ def render_sidebar_menu(current):
 
     with st.sidebar:
         sidebar_brand()
+        # WRAPPER che spinge in basso solo il blocco "MENU + lista"
+        st.markdown('<div class="sb-menu-wrap">', unsafe_allow_html=True)
         st.markdown('<div class="sb-title">MENU</div>', unsafe_allow_html=True)
         st.markdown('<div class="sidebar-menu">', unsafe_allow_html=True)
         for page in PAGES.keys():
@@ -388,7 +393,8 @@ def render_sidebar_menu(current):
                 f'href="{_href_for(page)}" target="_self" style="{style}">{page}</a></div>',
                 unsafe_allow_html=True
             )
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)  # .sidebar-menu
+        st.markdown("</div>", unsafe_allow_html=True)  # .sb-menu-wrap
 
 # ───────────────────────────── Main ─────────────────────────────
 def main():
