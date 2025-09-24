@@ -134,6 +134,9 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
 [data-testid="stAppViewContainer"] .stButton>button{
   background:var(--navy)!important; color:#fff!important; border:0!important; border-radius:10px!important; padding:10px 16px!important;
 }
+/* MENU più grande */
+.sb-title{ font-size:20px !important; line-height:1.1; }
+
 </style>
 """, unsafe_allow_html=True)
 
