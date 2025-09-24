@@ -1,5 +1,5 @@
-# SESSA After Sales – sidebar blu Sessa + logo + menu compatto (solo pagina attiva bold+underlined)
-# Le altre voci sono "light" e NON sottolineate.
+# SESSA After Sales – sidebar blu Sessa + logo + menu compatto
+# Solo la pagina attiva è BOLD + UNDERLINE; le altre sono light e NON sottolineate.
 
 import os, sqlite3, datetime as dt
 import pandas as pd
@@ -38,7 +38,11 @@ aside[aria-label="sidebar"], section[data-testid="stSidebar"]{ background:var(--
 aside[aria-label="sidebar"] *:not(input):not(textarea):not(select),
 section[data-testid="stSidebar"] *:not(input):not(textarea):not(select){ color:#fff!important; }
 aside[aria-label="sidebar"] img{ border-radius:12px; }
-.sb-brand{ margin-bottom:12px; }
+
+/* Spazio sotto il logo (aumentato) */
+.sb-brand{ margin-bottom:36px; }
+
+/* Titolo MENU */
 .sb-title{ font-weight:800; color:#fff; margin:0 0 8px 0; letter-spacing:.3px; }
 
 /* MENU: colonna senza pillole, spazi ridotti */
