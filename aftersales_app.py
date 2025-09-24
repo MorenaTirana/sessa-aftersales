@@ -375,7 +375,7 @@ def section_wir(conn):
 
     # — DATI INTESTAZIONE —
     st.markdown("### DATI")
-    with card(no-bg):
+    with card("no-bg"):
         c = st.columns(4)
         c[0].date_input("Data", dt.date.today(), key="wir_date")
         c[1].text_input("Nome & Cognome *", key="wir_fullname")
@@ -393,7 +393,7 @@ def section_wir(conn):
     # — RICHIESTE DINAMICHE —
     st.markdown("### RICHIESTE")
     save_clicked = False
-    with card(no-bg):
+    with card("no-bg"):
         for i in range(1, st.session_state.wir_nreq + 1):
             with st.expander(f"Richiesta {i}", expanded=(i == 1)):
                 st.text_area("Descrizione *", key=f"wir_desc_{i}")
