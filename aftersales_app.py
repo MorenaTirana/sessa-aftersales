@@ -49,11 +49,13 @@ aside[aria-label="sidebar"] img{ border-radius:12px; }
 .sidebar-menu .nav-item{ margin:0!important; border:0; }
 
 /* Link voci menu (niente pillole) */
+aside[aria-label="sidebar"] .sidebar-menu a.menu-item,
 section[data-testid="stSidebar"] .sidebar-menu a.menu-item{
   display:block; padding:6px 8px; text-decoration:none !important; color:#fff !important; border:0; border-radius:0;
   font-size:0.95rem; line-height:1.15; font-weight:400 !important; opacity:.65; cursor:pointer;
 }
 .sidebar-menu a.menu-item:hover{ background:rgba(255,255,255,.08); }
+aside[aria-label="sidebar"] .sidebar-menu a.menu-item.active,
 section[data-testid="stSidebar"] .sidebar-menu a.menu-item.active{
   opacity:1 !important; font-weight:800 !important; text-decoration:underline !important; text-decoration-thickness:3px; text-underline-offset:3px;
 }
@@ -490,6 +492,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
