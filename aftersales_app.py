@@ -191,6 +191,30 @@ hr{
   box-shadow: 0 2px 10px rgba(0,0,0,.06) !important;
   background:#fff !important;        /* evita bande piene colorate */
 }
+/* RIMUOVI COMPLETAMENTE LE LINEE ORIZZONTALI */
+.stDivider,
+div[role="separator"],
+*[data-testid="stHorizontalRule"],
+hr{
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Expander: niente barra/riempimento in testa */
+[data-testid="stExpander"] details,
+[data-testid="stExpander"] details > summary{
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+[data-testid="stExpander"] details > summary{
+  padding: 0 !important;
+  min-height: 0 !important;
+}
 
 </style>
 """, unsafe_allow_html=True)
