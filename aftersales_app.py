@@ -442,11 +442,6 @@ def get_current_page():
 
 
 def render_sidebar_menu(current):
-    # Evita doppio rendering del menu (che causerebbe DuplicateElementKey)
-    if st.session_state.get("_nav_rendered"):
-        return
-    st.session_state["_nav_rendered"] = True
-
     with st.sidebar:
         sidebar_brand()
         st.markdown("### MENU")
