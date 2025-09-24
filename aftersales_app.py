@@ -425,6 +425,16 @@ def get_current_page():
     return current
 
 
+def render_sidebar_menu(current):
+    # Evita doppio rendering del menu (che causerebbe DuplicateElementKey)
+    if st.session_state.get("_nav_rendered"):
+        return
+    st.session_state["_nav_rendered"] = True
+
+    render_sidebar_menu(current)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+
 def main():
     # LOGIN
     if not require_auth():
@@ -434,21 +444,7 @@ def main():
     current = get_current_page()
 
     # MENU in sidebar (wrapper per lo stile)
-    with st.sidebar:
-        sidebar_brand()
-        st.markdown("### MENU")
-        st.markdown('<div class="sidebar-menu">', unsafe_allow_html=True)
-        for page in PAGES.keys():
-            css = "nav-item active" if page == current else "nav-item"
-            st.markdown(f'<div class="{css}">', unsafe_allow_html=True)
-            if st.button(page, key=f"nav_{page}"):
-                st.session_state.nav = page
-                try:
-                    st.query_params.update({"nav": page})
-                except Exception:
-                    st.experimental_set_query_params(nav=page)
-                st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
+    render_sidebar_menu(current)
         st.markdown("</div>", unsafe_allow_html=True)
 
     # HEADER + CONTENUTO
@@ -463,6 +459,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 if __name__ == "__main__":
