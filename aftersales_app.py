@@ -335,7 +335,13 @@ def section_wir(conn):
             st.rerun()
 
     # — SALVA & GENERA MODULO —
-    if st.button("💾 Salva & Genera Modulo", key="wir_save"):
+   # — SALVA & GENERA MODULO (centrato) —
+left, center, right = st.columns([1, 1, 1])
+save_clicked = center.button("💾 Salva & Genera Modulo", key="wir_save")
+
+if save_clicked:
+    ...
+
         # Validazione campi obbligatori intestazione
         errors = []
         fullname   = (st.session_state.get("wir_fullname") or "").strip()
