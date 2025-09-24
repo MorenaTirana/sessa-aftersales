@@ -39,8 +39,10 @@ aside[aria-label="sidebar"] *:not(input):not(textarea):not(select),
 section[data-testid="stSidebar"] *:not(input):not(textarea):not(select){ color:#fff!important; }
 aside[aria-label="sidebar"] img{ border-radius:12px; }
 
-/* Spazio sotto il logo (aumentato) */
-.sb-brand{ margin-bottom:36px; }
+/* Spazio sotto il logo (più in basso) */
+.sb-brand{ margin-bottom:64px; }
+/* Variante responsive (se la preferisci): */
+/* .sb-brand{ margin-bottom:clamp(32px, 6vh, 96px); } */
 
 /* Titolo MENU */
 .sb-title{ font-weight:800; color:#fff; margin:0 0 8px 0; letter-spacing:.3px; }
