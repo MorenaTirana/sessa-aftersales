@@ -161,7 +161,7 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
 .card{
   border-radius: 0 !important;
   box-shadow: none !important;
-  background-color:red;
+  background-color:#3E79B3;
   height:2px;
 }
 
