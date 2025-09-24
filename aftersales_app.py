@@ -37,12 +37,34 @@ st.markdown(
 /* --- SIDEBAR --- */
 aside[aria-label="sidebar"], section[data-testid="stSidebar"]{ background:var(--sessa)!important; }
 aside[aria-label="sidebar"] *:not(input):not(textarea):not(select),
-section[data-testid="stSidebar"] *:not(input):not(textarea):not(select){ color:#fff!important; }  /* testi bianchi, NON gli input */
+section[data-testid="stSidebar"] *:not(input):not(textarea):not(select){ color:#fff!important; }
 aside[aria-label="sidebar"] img{ border-radius:12px; }
 /* Blocchetto brand in alto alla sidebar */
 .sb-brand{ margin-bottom:12px; }
 
+/* MENU: layout colonna con gap controllato */
+.sidebar-menu{ display:flex; flex-direction:column; gap:6px; }
+.sidebar-menu .nav-item{ margin:0!important; border-bottom:0; }
+.sidebar-menu .stButton{ margin:0!important; padding:0!important; }
+
+/* Bottoni menu: eliminare background/pillole e forzare stile */
+aside[aria-label="sidebar"] .sidebar-menu .stButton>button{
+  width:100%; text-align:left; background:transparent!important; background-color:transparent!important;
+  color:#fff!important; border:0!important; box-shadow:none!important; outline:none!important; appearance:none!important;
+  padding:4px 10px!important; border-radius:4px!important; line-height:1.15!important; font-size:0.95rem!important;
+  font-weight:600!important; filter:none!important; min-height:auto!important;
+}
+/* Hover leggero */
+.sidebar-menu .stButton>button:hover{ background:rgba(255,255,255,.08)!important; }
+/* Attivo: sottolineato + bold pieno */
+.sidebar-menu .nav-item.active .stButton>button{
+  border-bottom:3px solid #fff!important; font-weight:800!important; opacity:1!important;
+}
+/* Non attivi: font più leggero/chiaro */
+.sidebar-menu .nav-item:not(.active) .stButton>button{ opacity:.75!important; font-weight:500!important; }
+
 /* Etichette bianche per login (non toccano gli input) */
+.s-label{ color:#fff; font-weight:700; margin:8px 0 6px; letter-spacing:.2px; } (non toccano gli input) */
 .s-label{ color:#fff; font-weight:700; margin:8px 0 6px; letter-spacing:.2px; }
 
 /* INPUT LOGIN in sidebar: sempre testo nero su bianco + autofill */
@@ -466,6 +488,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
