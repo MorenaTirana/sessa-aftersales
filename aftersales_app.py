@@ -1,6 +1,7 @@
 # SESSA After Sales – sidebar blu Sessa + logo + menu compatto
 # Pagina attiva: BOLD + UNDERLINE; inattive: light no underline.
-# Header blu più in alto (allineamento col logo) e logo nell'header a sinistra del titolo.
+# Header blu più in alto (allineamento col logo), logo nell'header a sinistra del titolo.
+# Bottoni: "➕ Aggiungi Richiesta" (sotto RICHIESTE) e "💾 Salva & Genera Modulo" (sotto).
 
 import os, sqlite3, datetime as dt, base64
 import pandas as pd
@@ -65,8 +66,9 @@ aside[aria-label="sidebar"] img{ border-radius:12px; }
 /* Solo il blocco (MENU + lista) scende rispetto al logo */
 .sb-menu-wrap{ margin-top:var(--menu-offset) !important; }
 
-.sb-title{ font-weight:800; color:#fff; margin:0 0 8px 0; letter-spacing:.3px; }
+.sb-title{ font-weight:800; color:#fff; margin:0 0 8px 0; letter-spacing:.3px; font-size:20px !important; }
 
+/* MENU compatto */
 .sidebar-menu{ display:flex; flex-direction:column; gap:6px; }
 .sidebar-menu .nav-item{ margin:0!important; border:0; }
 
@@ -134,9 +136,6 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
 [data-testid="stAppViewContainer"] .stButton>button{
   background:var(--navy)!important; color:#fff!important; border:0!important; border-radius:10px!important; padding:10px 16px!important;
 }
-/* MENU più grande */
-.sb-title{ font-size:20px !important; line-height:1.1; }
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -170,9 +169,30 @@ def ensure_schema(conn: sqlite3.Connection):
     )""")
     conn.commit()
 
+def run_sql(conn, q, p=None):
+    cur = conn.cursor()
+    cur.execute(q, p or [])
+    conn.commit()
+    return cur
+
 def df_read(conn, table):
     try: return pd.read_sql_query(f"SELECT * FROM {table} ORDER BY id DESC", conn)
     except Exception: return pd.DataFrame()
+
+# ───────────────────────────── Helpers ─────────────────────────────
+def _save_uploaded_files(files, base_dir, prefix):
+    """Salva i file caricati e ritorna la lista dei path salvati."""
+    saved = []
+    if not files: return saved
+    os.makedirs(base_dir, exist_ok=True)
+    ts = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    for i, f in enumerate(files):
+        safe_name = f.name.replace("/", "_").replace("\\", "_")
+        out_path = os.path.join(base_dir, f"{prefix}_{ts}_{i}_{safe_name}")
+        with open(out_path, "wb") as out:
+            out.write(f.getbuffer())
+        saved.append(out_path)
+    return saved
 
 # ───────────────────────────── UI helpers ─────────────────────────────
 @contextmanager
@@ -258,7 +278,13 @@ def require_auth() -> bool:
 
 # ───────────────────────────── Sezioni ─────────────────────────────
 def section_wir(conn):
+    # inizializza il numero di richieste dinamiche
+    if "wir_nreq" not in st.session_state:
+        st.session_state.wir_nreq = 1
+
     st.subheader("⚓ Warranty Intervention Requests (WIR)")
+
+    # — DATI INTESTAZIONE —
     st.markdown("### DATI")
     with card():
         c = st.columns(4)
@@ -274,14 +300,141 @@ def section_wir(conn):
         c3 = st.columns(2)
         c3[0].text_input("Locazione barca", key="wir_loc")
         c3[1].text_input("Contatto a bordo", key="wir_onboard")
+
+    # — RICHIESTE DINAMICHE —
     st.markdown("### RICHIESTE")
     with card():
-        with st.expander("Richiesta 1", expanded=True):
-            st.text_area("Descrizione *", key="wir_desc_1")
-            st.file_uploader("Foto (una o più)", type=["png","jpg","jpeg"], accept_multiple_files=True, key="wir_ph_1")
-            cc2 = st.columns(2)
-            cc2[0].text_input("Marchio", key="wir_brand_1")
-            cc2[1].text_input("Articolo / N. Serie", key="wir_item_1")
+        for i in range(1, st.session_state.wir_nreq + 1):
+            with st.expander(f"Richiesta {i}", expanded=(i == 1)):
+                st.text_area("Descrizione *", key=f"wir_desc_{i}")
+                st.file_uploader(
+                    "Foto (una o più)",
+                    type=["png", "jpg", "jpeg"],
+                    accept_multiple_files=True,
+                    key=f"wir_ph_{i}",
+                )
+                cc2 = st.columns(2)
+                cc2[0].text_input("Marchio", key=f"wir_brand_{i}")
+                cc2[1].text_input("Articolo / N. Serie", key=f"wir_item_{i}")
+
+        # bottone sotto al blocco RICHIESTE
+        if st.button("➕ Aggiungi Richiesta", key="wir_add"):
+            st.session_state.wir_nreq += 1
+            st.rerun()
+
+    # — SALVA & GENERA MODULO —
+    if st.button("💾 Salva & Genera Modulo", key="wir_save"):
+        # Validazione campi obbligatori intestazione
+        errors = []
+        fullname   = (st.session_state.get("wir_fullname") or "").strip()
+        dealer     = (st.session_state.get("wir_dealer") or "").strip()
+        email      = (st.session_state.get("wir_email") or "").strip()
+        phone      = (st.session_state.get("wir_phone") or "").strip()
+        boat_model = (st.session_state.get("wir_boat_model") or "").strip()
+        hull       = (st.session_state.get("wir_hull") or "").strip()
+        wstart     = st.session_state.get("wir_wstart")
+
+        if not fullname:   errors.append("Nome & Cognome")
+        if not dealer:     errors.append("Dealer")
+        if not email:      errors.append("E-mail")
+        if not phone:      errors.append("Cellulare")
+        if not boat_model: errors.append("Modello di barca")
+        if not hull:       errors.append("Matricola nr")
+
+        richieste = []
+        for i in range(1, st.session_state.wir_nreq + 1):
+            desc  = (st.session_state.get(f"wir_desc_{i}") or "").strip()
+            brand = (st.session_state.get(f"wir_brand_{i}") or "").strip()
+            item  = (st.session_state.get(f"wir_item_{i}") or "").strip()
+            ph    = st.session_state.get(f"wir_ph_{i}")  # lista di UploadedFile
+
+            if desc or brand or item or ph:
+                if not desc:
+                    errors.append(f"Descrizione richiesta {i}")
+                richieste.append((i, desc, brand, item, ph))
+
+        if not richieste:
+            errors.append("Almeno una richiesta compilata")
+
+        if errors:
+            st.error("Compila i campi obbligatori: " + ", ".join(errors))
+            st.stop()
+
+        # Salvataggio nel DB: 1 riga per ogni richiesta
+        now = dt.datetime.now().isoformat(timespec="seconds")
+        saved_count = 0
+        for i, desc, brand, item, ph in richieste:
+            _save_uploaded_files(ph, UPLOADS, f"wir_{i}")  # salva foto
+            run_sql(
+                conn,
+                """INSERT INTO wir(
+                    created_at, dealer, boat, title, description, brand, serial,
+                    full_name, email, phone, boat_model, hull_serial,
+                    warranty_start, boat_location, onboard_contact
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                [
+                    now,
+                    dealer, "", f"Richiesta {i}", desc, brand, item,
+                    fullname, email, phone, boat_model, hull,
+                    str(wstart), (st.session_state.get("wir_loc") or ""),
+                    (st.session_state.get("wir_onboard") or "")
+                ],
+            )
+            saved_count += 1
+
+        # Genera un semplice modulo HTML scaricabile
+        rows_html = []
+        for i, desc, brand, item, _ in richieste:
+            rows_html.append(
+                f"<tr><td style='padding:6px 8px;border:1px solid #ccc'>{i}</td>"
+                f"<td style='padding:6px 8px;border:1px solid #ccc'>{brand or '-'}</td>"
+                f"<td style='padding:6px 8px;border:1px solid #ccc'>{item or '-'}</td>"
+                f"<td style='padding:6px 8px;border:1px solid #ccc'>{desc}</td></tr>"
+            )
+        html = f"""
+        <html>
+        <head><meta charset="utf-8" /><title>Modulo WIR</title></head>
+        <body style="font-family:Arial,Helvetica,sans-serif">
+          <h2 style="margin:0 0 8px">SESSA – Warranty Intervention Request</h2>
+          <div style="margin:0 0 12px;color:#444">{now}</div>
+          <h3 style="margin:16px 0 6px">Dati Cliente/Barca</h3>
+          <table style="border-collapse:collapse;font-size:14px">
+            <tr><td><b>Nome</b></td><td>{fullname}</td></tr>
+            <tr><td><b>Dealer</b></td><td>{dealer}</td></tr>
+            <tr><td><b>E-mail</b></td><td>{email}</td></tr>
+            <tr><td><b>Cellulare</b></td><td>{phone}</td></tr>
+            <tr><td><b>Modello barca</b></td><td>{boat_model}</td></tr>
+            <tr><td><b>Matricola</b></td><td>{hull}</td></tr>
+            <tr><td><b>Data garanzia</b></td><td>{wstart}</td></tr>
+            <tr><td><b>Locazione</b></td><td>{st.session_state.get("wir_loc") or ""}</td></tr>
+            <tr><td><b>Contatto a bordo</b></td><td>{st.session_state.get("wir_onboard") or ""}</td></tr>
+          </table>
+
+          <h3 style="margin:18px 0 6px">Richieste</h3>
+          <table style="border-collapse:collapse;font-size:14px">
+            <thead>
+              <tr>
+                <th style="padding:6px 8px;border:1px solid #ccc;text-align:left">#</th>
+                <th style="padding:6px 8px;border:1px solid #ccc;text-align:left">Marchio</th>
+                <th style="padding:6px 8px;border:1px solid #ccc;text-align:left">Articolo / N. Serie</th>
+                <th style="padding:6px 8px;border:1px solid #ccc;text-align:left">Descrizione</th>
+              </tr>
+            </thead>
+            <tbody>
+              {''.join(rows_html)}
+            </tbody>
+          </table>
+        </body>
+        </html>
+        """.encode("utf-8")
+
+        st.success(f"✅ Salvate {saved_count} richieste su database.")
+        st.download_button(
+            "⬇️ Scarica Modulo WIR (HTML)",
+            data=html,
+            file_name=f"Modulo_WIR_{dt.date.today().isoformat()}.html",
+            mime="text/html",
+        )
 
 def section_spr(conn):
     st.subheader("🛠️ Spare Parts Request (SPR)")
@@ -303,31 +456,38 @@ def section_spr(conn):
 
 def section_clienti(conn):
     st.subheader("CLIENTI")
-    with card(): st.write("Anagrafica Clienti.")
+    with card():
+        st.write("Anagrafica Clienti.")
 
 def section_dealer(conn):
     st.subheader("DEALER")
-    with card(): st.write("Anagrafica Dealer.")
+    with card():
+        st.write("Anagrafica Dealer.")
 
 def section_ddt033(conn):
     st.subheader("DOCUMENTI GARANZIE")
-    with card(): st.write("Documenti Garanzie.")
+    with card():
+        st.write("Documenti Garanzie.")
 
 def section_ddt006(conn):
     st.subheader("DOCUMENTI VENDITE")
-    with card(): st.write("Documenti Vendite.")
+    with card():
+        st.write("Documenti Vendite.")
 
 def section_quotes_invoices(conn):
     st.subheader("€ RIPARAZIONI")
-    with card(): st.write("Preventivi / Fatture.")
+    with card():
+        st.write("Preventivi / Fatture.")
 
 def section_trips(conn):
     st.subheader("TRASFERTE")
-    with card(): st.write("Trasferte.")
+    with card():
+        st.write("Trasferte.")
 
 def section_boats(conn):
     st.subheader("BARCHE")
-    with card(): st.write("Archivio barche.")
+    with card():
+        st.write("Archivio barche.")
 
 def section_storico(conn):
     st.subheader("STORICO PRATICHE")
@@ -347,7 +507,6 @@ def section_storico(conn):
         st.markdown("### SPR")
         with card():
             st.dataframe(dfs, use_container_width=True)
-
 
 # ───────────────────────────── Routing ─────────────────────────────
 PAGES = {
