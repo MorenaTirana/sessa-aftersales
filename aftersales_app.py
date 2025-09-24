@@ -39,7 +39,7 @@ st.set_page_config(page_title="SESSA After Sales", page_icon=_page_icon(), layou
 st.markdown(
     """
 <style>
-:root{ --sessa:#3E79B3; --navy:#0b2a4a; --off:#F6F9FC; --sb-logo-top:14px; }  /* ← micro-tuning altezza logo */
+:root{ --sessa:#3E79B3; --navy:#0b2a4a; --off:#F6F9FC; --sb-logo-top:14px; --brand-h:96px; }
 .stApp, .main .block-container{ background:var(--off)!important; font-family:'Times New Roman', Times, serif!important; }
 
 /* --- SIDEBAR --- */
@@ -83,11 +83,22 @@ section[data-testid="stSidebar"] .sidebar-menu a.menu-item:active{
 }
 
 /* ===== Header brand nel MAIN (con logo a sinistra) ===== */
-.brand{ background:#3E79B3; color:#fff; border-radius:14px; padding:14px 16px; margin-bottom:18px; }
-.brand-row{ display:flex; align-items:center; gap:12px; }
-.brand-logo{ height:48px; width:auto; border-radius:8px; display:block; }
+.brand{
+  background:#3E79B3; color:#fff; border-radius:14px;
+  padding:14px 16px; margin-bottom:18px;
+  min-height:var(--brand-h);             /* ← altezza della fascia */
+  display:flex; align-items:center;      /* allinea verticalmente contenuti */
+}
+.brand-row{
+  display:flex; align-items:center; gap:16px; width:100%;
+}
+.brand-logo{
+  height:calc(var(--brand-h) - 28px);    /* 28px = padding verticale 14px*2 */
+  width:auto; object-fit:contain; border-radius:8px; display:block;
+}
 .brand h1{ color:#fff!important; margin:0; }
 .brand small{ color:#fff!important; opacity:.95; }
+
 
 /* Card */
 .card{ background:#fff; border-radius:14px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.06); }
