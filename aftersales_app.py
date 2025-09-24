@@ -135,7 +135,7 @@ st.markdown("""
   padding-top: 0 !important;
 }
 .brand{
-  margin-top: -24px !important;   /* prova -20 / -24 / -28 per centrare perfettamente */
+  margin-top: 2px !important;   /* prova -20 / -24 / -28 per centrare perfettamente */
 }
 
 </style>
