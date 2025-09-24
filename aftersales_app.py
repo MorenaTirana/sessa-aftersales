@@ -315,6 +315,7 @@ def section_wir(conn):
 
     # — RICHIESTE DINAMICHE —
     st.markdown("### RICHIESTE")
+    save_clicked = False
     with card():
         for i in range(1, st.session_state.wir_nreq + 1):
             with st.expander(f"Richiesta {i}", expanded=(i == 1)):
@@ -329,19 +330,16 @@ def section_wir(conn):
                 cc2[0].text_input("Marchio", key=f"wir_brand_{i}")
                 cc2[1].text_input("Articolo / N. Serie", key=f"wir_item_{i}")
 
-        # bottone sotto al blocco RICHIESTE
-        if st.button("➕ Aggiungi Richiesta", key="wir_add"):
-            st.session_state.wir_nreq += 1
-            st.rerun()
+        # bottone AGGIUNGI (sinistra)
+        st.button("➕ Aggiungi Richiesta", key="wir_add", on_click=lambda: st.session_state.update(wir_nreq=st.session_state.wir_nreq+1))
+
+        # spazio e pulsante SALVA centrato
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+        left, center, right = st.columns([3, 2, 3])   # il centrale è più stretto, resta in mezzo
+        save_clicked = center.button("💾 Salva & Genera Modulo", key="wir_save")
 
     # — SALVA & GENERA MODULO —
-   # — SALVA & GENERA MODULO (centrato) —
-left, center, right = st.columns([1, 1, 1])
-save_clicked = center.button("💾 Salva & Genera Modulo", key="wir_save")
-
-if save_clicked:
-
-        # Validazione campi obbligatori intestazione
+    if save_clicked:
         errors = []
         fullname   = (st.session_state.get("wir_fullname") or "").strip()
         dealer     = (st.session_state.get("wir_dealer") or "").strip()
@@ -364,7 +362,6 @@ if save_clicked:
             brand = (st.session_state.get(f"wir_brand_{i}") or "").strip()
             item  = (st.session_state.get(f"wir_item_{i}") or "").strip()
             ph    = st.session_state.get(f"wir_ph_{i}")  # lista di UploadedFile
-
             if desc or brand or item or ph:
                 if not desc:
                     errors.append(f"Descrizione richiesta {i}")
@@ -377,11 +374,11 @@ if save_clicked:
             st.error("Compila i campi obbligatori: " + ", ".join(errors))
             st.stop()
 
-        # Salvataggio nel DB: 1 riga per ogni richiesta
+        # Salvataggio nel DB (1 riga per richiesta) + salvataggio eventuali foto
         now = dt.datetime.now().isoformat(timespec="seconds")
         saved_count = 0
         for i, desc, brand, item, ph in richieste:
-            _save_uploaded_files(ph, UPLOADS, f"wir_{i}")  # salva foto
+            _save_uploaded_files(ph, UPLOADS, f"wir_{i}")
             run_sql(
                 conn,
                 """INSERT INTO wir(
@@ -390,16 +387,14 @@ if save_clicked:
                     warranty_start, boat_location, onboard_contact
                 ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 [
-                    now,
-                    dealer, "", f"Richiesta {i}", desc, brand, item,
-                    fullname, email, phone, boat_model, hull,
-                    str(wstart), (st.session_state.get("wir_loc") or ""),
-                    (st.session_state.get("wir_onboard") or "")
+                    now, dealer, "", f"Richiesta {i}", desc, brand, item,
+                    fullname, email, phone, boat_model, hull, str(wstart),
+                    (st.session_state.get("wir_loc") or ""), (st.session_state.get("wir_onboard") or "")
                 ],
             )
             saved_count += 1
 
-        # Genera un semplice modulo HTML scaricabile
+        # Modulo HTML scaricabile
         rows_html = []
         for i, desc, brand, item, _ in richieste:
             rows_html.append(
@@ -409,25 +404,11 @@ if save_clicked:
                 f"<td style='padding:6px 8px;border:1px solid #ccc'>{desc}</td></tr>"
             )
         html = f"""
-        <html>
-        <head><meta charset="utf-8" /><title>Modulo WIR</title></head>
+        <html><head><meta charset="utf-8" /><title>Modulo WIR</title></head>
         <body style="font-family:Arial,Helvetica,sans-serif">
           <h2 style="margin:0 0 8px">SESSA – Warranty Intervention Request</h2>
           <div style="margin:0 0 12px;color:#444">{now}</div>
-          <h3 style="margin:16px 0 6px">Dati Cliente/Barca</h3>
-          <table style="border-collapse:collapse;font-size:14px">
-            <tr><td><b>Nome</b></td><td>{fullname}</td></tr>
-            <tr><td><b>Dealer</b></td><td>{dealer}</td></tr>
-            <tr><td><b>E-mail</b></td><td>{email}</td></tr>
-            <tr><td><b>Cellulare</b></td><td>{phone}</td></tr>
-            <tr><td><b>Modello barca</b></td><td>{boat_model}</td></tr>
-            <tr><td><b>Matricola</b></td><td>{hull}</td></tr>
-            <tr><td><b>Data garanzia</b></td><td>{wstart}</td></tr>
-            <tr><td><b>Locazione</b></td><td>{st.session_state.get("wir_loc") or ""}</td></tr>
-            <tr><td><b>Contatto a bordo</b></td><td>{st.session_state.get("wir_onboard") or ""}</td></tr>
-          </table>
-
-          <h3 style="margin:18px 0 6px">Richieste</h3>
+          <h3 style="margin:16px 0 6px">Richieste</h3>
           <table style="border-collapse:collapse;font-size:14px">
             <thead>
               <tr>
@@ -437,12 +418,9 @@ if save_clicked:
                 <th style="padding:6px 8px;border:1px solid #ccc;text-align:left">Descrizione</th>
               </tr>
             </thead>
-            <tbody>
-              {''.join(rows_html)}
-            </tbody>
+            <tbody>{''.join(rows_html)}</tbody>
           </table>
-        </body>
-        </html>
+        </body></html>
         """.encode("utf-8")
 
         st.success(f"✅ Salvate {saved_count} richieste su database.")
@@ -452,6 +430,7 @@ if save_clicked:
             file_name=f"Modulo_WIR_{dt.date.today().isoformat()}.html",
             mime="text/html",
         )
+
 
 def section_spr(conn):
     st.subheader("🛠️ Spare Parts Request (SPR)")
