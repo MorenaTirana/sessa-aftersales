@@ -161,13 +161,6 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
   box-shadow: none !important;
 }
 
-/* Card senza bordo arrotondato visibile */
-.card{
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  background-color:#3E79B3;
-  height:2px;
-}
 /* 1) Expander: barra molto sottile */
 [data-testid="stExpander"] details > summary{
   padding-block: 2px !important;     /* ← spessore (2–6px) */
@@ -396,32 +389,31 @@ def section_wir(conn):
     st.subheader("⚓ Warranty Intervention Requests (WIR)")
 
     # — DATI INTESTAZIONE —
-   st.markdown("### DATI")
-with card("no-bg"):
-    c = st.columns(4)
-    c[0].date_input(
-        "Data",
-        value=dt.date.today(),
-        min_value=DATE_MIN_1958,
-        max_value=DATE_MAX_FAR,
-        key="wir_date",
-    )
-    c[1].text_input("Nome & Cognome *", key="wir_fullname")
-    c[2].text_input("Dealer *", key="wir_dealer")
-    c[3].text_input("E-mail *", key="wir_email")
+    st.markdown("### DATI")
+    with card("no-bg"):
+        c = st.columns(4)
+        c[0].date_input(
+            "Data",
+            value=dt.date.today(),
+            min_value=DATE_MIN_1958,
+            max_value=DATE_MAX_FAR,
+            key="wir_date",
+        )
+        c[1].text_input("Nome & Cognome *", key="wir_fullname")
+        c[2].text_input("Dealer *", key="wir_dealer")
+        c[3].text_input("E-mail *", key="wir_email")
 
-    c2 = st.columns(4)
-    c2[0].text_input("Cellulare *", key="wir_phone")
-    c2[1].text_input("Modello di barca *", key="wir_boat_model")
-    c2[2].text_input("Matricola nr *", key="wir_hull")
-    c2[3].date_input(
-        "Data attivazione garanzia *",
-        value=dt.date.today(),
-        min_value=DATE_MIN_1958,
-        max_value=DATE_MAX_FAR,
-        key="wir_wstart",
-    )
-
+        c2 = st.columns(4)
+        c2[0].text_input("Cellulare *", key="wir_phone")
+        c2[1].text_input("Modello di barca *", key="wir_boat_model")
+        c2[2].text_input("Matricola nr *", key="wir_hull")
+        c2[3].date_input(
+            "Data attivazione garanzia *",
+            value=dt.date.today(),
+            min_value=DATE_MIN_1958,
+            max_value=DATE_MAX_FAR,
+            key="wir_wstart",
+        )
 
     # — RICHIESTE DINAMICHE —
     st.markdown("### RICHIESTE")
@@ -441,11 +433,15 @@ with card("no-bg"):
                 cc2[1].text_input("Articolo / N. Serie", key=f"wir_item_{i}")
 
         # bottone AGGIUNGI (sinistra)
-        st.button("➕ Aggiungi Richiesta", key="wir_add", on_click=lambda: st.session_state.update(wir_nreq=st.session_state.wir_nreq+1))
+        st.button(
+            "➕ Aggiungi Richiesta",
+            key="wir_add",
+            on_click=lambda: st.session_state.update(wir_nreq=st.session_state.wir_nreq + 1),
+        )
 
         # spazio e pulsante SALVA centrato
         st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-        left, center, right = st.columns([3, 2, 3])   # il centrale è più stretto, resta in mezzo
+        left, center, right = st.columns([3, 2, 3])
         save_clicked = center.button("💾 Salva & Genera Modulo", key="wir_save")
 
     # — SALVA & GENERA MODULO —
@@ -471,7 +467,7 @@ with card("no-bg"):
             desc  = (st.session_state.get(f"wir_desc_{i}") or "").strip()
             brand = (st.session_state.get(f"wir_brand_{i}") or "").strip()
             item  = (st.session_state.get(f"wir_item_{i}") or "").strip()
-            ph    = st.session_state.get(f"wir_ph_{i}")  # lista di UploadedFile
+            ph    = st.session_state.get(f"wir_ph_{i}")
             if desc or brand or item or ph:
                 if not desc:
                     errors.append(f"Descrizione richiesta {i}")
@@ -484,7 +480,6 @@ with card("no-bg"):
             st.error("Compila i campi obbligatori: " + ", ".join(errors))
             st.stop()
 
-        # Salvataggio nel DB (1 riga per richiesta) + salvataggio eventuali foto
         now = dt.datetime.now().isoformat(timespec="seconds")
         saved_count = 0
         for i, desc, brand, item, ph in richieste:
@@ -504,7 +499,6 @@ with card("no-bg"):
             )
             saved_count += 1
 
-        # Modulo HTML scaricabile
         rows_html = []
         for i, desc, brand, item, _ in richieste:
             rows_html.append(
@@ -541,32 +535,32 @@ with card("no-bg"):
             mime="text/html",
         )
 
-
 def section_spr(conn):
     st.subheader("🛠️ Spare Parts Request (SPR)")
-   st.markdown("### DATI")
-with card("no-bg"):
-    c = st.columns(4)
-    c[0].date_input(
-        "Data",
-        value=dt.date.today(),
-        min_value=DATE_MIN_1958,
-        max_value=DATE_MAX_FAR,
-        key="spr_date",
-    )
-    c[1].text_input("Nome & Cognome *", key="spr_fullname")
-    c[2].text_input("Dealer *", key="spr_dealer")
-    c[3].text_input("E-mail *", key="spr_email")
 
-    c2 = st.columns(4)
-    c2[0].text_input("Cellulare *", key="spr_phone")
-    c2[1].text_input("Modello di barca *", key="spr_boat_model")
-    c2[2].text_input("Matricola nr *", key="spr_hull")
-    c2[3].empty()
+    st.markdown("### DATI")
+    with card("no-bg"):
+        c = st.columns(4)
+        c[0].date_input(
+            "Data",
+            value=dt.date.today(),
+            min_value=DATE_MIN_1958,
+            max_value=DATE_MAX_FAR,
+            key="spr_date",
+        )
+        c[1].text_input("Nome & Cognome *", key="spr_fullname")
+        c[2].text_input("Dealer *", key="spr_dealer")
+        c[3].text_input("E-mail *", key="spr_email")
 
-    c3 = st.columns(2)
-    c3[0].text_input("Locazione barca", key="spr_loc")
-    c3[1].text_input("Contatto a bordo", key="spr_onboard")
+        c2 = st.columns(4)
+        c2[0].text_input("Cellulare *", key="spr_phone")
+        c2[1].text_input("Modello di barca *", key="spr_boat_model")
+        c2[2].text_input("Matricola nr *", key="spr_hull")
+        c2[3].empty()
+
+        c3 = st.columns(2)
+        c3[0].text_input("Locazione barca", key="spr_loc")
+        c3[1].text_input("Contatto a bordo", key="spr_onboard")
 
 def section_clienti(conn):
     st.subheader("CLIENTI")
