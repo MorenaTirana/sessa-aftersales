@@ -88,18 +88,22 @@ section[data-testid="stSidebar"] .sidebar-menu a.menu-item:active{
   font-size:0.95rem; line-height:1.15;
 }
 
-/* ====== HEADER BLU NEL MAIN ====== */
+/* ===== Header brand nel MAIN (logo a piena altezza) ===== */
 .brand{
   background:#3E79B3; color:#fff; border-radius:14px;
-  padding:14px 16px; margin-bottom:18px;
-  min-height:var(--brand-h);
-  display:flex; align-items:center;
-  margin-top:var(--header-up) !important; /* ↑ spinge su il blocco blu */
+  height:var(--brand-h);                 /* altezza esatta della fascia */
+  margin-top:var(--header-up) !important;
+  margin-bottom:18px;
+  padding:0 16px;                        /* niente padding verticale, il logo può arrivare ai bordi */
+  display:flex;                          /* mantiene layout in riga */
 }
-.brand-row{ display:flex; align-items:center; gap:16px; width:100%; }
+.brand-row{
+  display:flex; align-items:center; gap:16px;
+  width:100%; height:100%;               /* per consentire al logo l'altezza 100% */
+}
 .brand-logo{
-  height:calc(var(--brand-h) - 28px); /* 28px = 14px padding top + 14px bottom */
-  width:auto; object-fit:contain; border-radius:8px; display:block;
+  height:100%; width:auto;               /* il logo riempie tutta l'altezza della fascia */
+  object-fit:contain; display:block; border-radius:10px;
 }
 .brand h1{ color:#fff!important; margin:0; }
 .brand small{ color:#fff!important; opacity:.95; }
