@@ -224,6 +224,24 @@ hr{
   padding: 0 !important;
   min-height: 0 !important;
 }
+/* Fix doppio bordo nei DateInput */
+[data-testid="stAppViewContainer"] .stDateInput [data-baseweb="input"]{
+  border:1px solid #d0d6df !important;   /* unico bordo */
+  border-radius:10px !important;
+  background:#fff !important;
+  box-shadow:none !important;
+}
+[data-testid="stAppViewContainer"] .stDateInput input{
+  border:none !important;                 /* niente secondo bordo */
+  outline:none !important;
+  box-shadow:none !important;
+  background:transparent !important;
+}
+/* rimuove eventuale ring di BaseWeb */
+[data-testid="stAppViewContainer"] .stDateInput [data-baseweb="input"]::after,
+[data-testid="stAppViewContainer"] .stDateInput [data-baseweb="input"]::before{
+  content:none !important;
+}
 
 </style>
 """, unsafe_allow_html=True)
