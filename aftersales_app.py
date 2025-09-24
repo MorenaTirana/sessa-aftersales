@@ -221,7 +221,7 @@ def header():
       <div class="brand">
         <div class="brand-row">
           {img_html}
-          <div>
+          <div class="brand-text">
             <h1>SESSA AFTER SALES</h1>
             <small>After Sales Dashboard</small>
           </div>
