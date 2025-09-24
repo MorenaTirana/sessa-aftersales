@@ -43,7 +43,7 @@ aside[aria-label="sidebar"] img{ border-radius:12px; }
 .sb-brand{ margin-bottom:12px; }
 
 /* SOLO il blocco (MENU + lista) scende più in basso rispetto al logo */
-.sb-menu-wrap{ margin-top:48px !important; }  /* ← regola lo spazio qui (es. 56/64) */
+.sb-menu-wrap{ margin-top:120px !important; }  /* ← regola lo spazio qui (es. 56/64) */
 
 /* Titolo MENU */
 .sb-title{ font-weight:800; color:#fff; margin:0 0 8px 0; letter-spacing:.3px; }
