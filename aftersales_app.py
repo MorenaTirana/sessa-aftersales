@@ -130,7 +130,7 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
 
 /* Alza il blocco blu (riduce lo spazio bianco sopra) */
 [data-testid="stAppViewContainer"] .main .block-container{
-  padding-top: -2px !important;   /* prova 0–16px per regolare finemente */
+  padding-top: -8px !important;   /* prova 0–16px per regolare finemente */
 }
 
 /* (facoltativo) assicura che il blocco blu non aggiunga altro spazio sopra */
