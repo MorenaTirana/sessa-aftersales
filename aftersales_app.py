@@ -94,7 +94,7 @@ section[data-testid="stSidebar"] .sidebar-menu a.menu-item:active{
   height:var(--brand-h);                 /* altezza esatta della fascia */
   margin-top:var(--header-up) !important;
   margin-bottom:18px;
-  padding:0 16px;                        /* niente padding verticale, il logo può arrivare ai bordi */
+  padding:10px 16px;                        /* niente padding verticale, il logo può arrivare ai bordi */
   display:flex;                          /* mantiene layout in riga */
 }
 .brand-row{
