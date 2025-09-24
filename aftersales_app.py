@@ -69,10 +69,11 @@ div[data-testid="stSidebar"] input:-webkit-autofill{
 }
 
 /* MENU in sidebar: compatto, niente sfondo, underline bianca sulla pagina attiva */
-.sidebar-menu .nav-item{ margin:2px 0; }                                      /* spazi ridotti */
-.sidebar-menu .stButton>button{
-  width:100%; text-align:left; background:transparent!important; color:#fff!important; border:none!important;
-  padding:4px 8px!important; margin:0!important; border-radius:8px!important; font-weight:700!important;
+.sidebar-menu .nav-item{ margin:0 0 6px 0 !important; } /* spazi ridotti e uniformi */
+.sidebar-menu .stButton{ margin:0 !important; }
+aside[aria-label="sidebar"] .sidebar-menu .stButton>button{
+  width:100%; text-align:left; background:transparent!important; color:#fff!important; border:0!important;
+  padding:6px 10px!important; margin:0!important; border-radius:8px!important; box-shadow:none!important; font-weight:700!important;
 }
 .sidebar-menu .stButton>button:hover{ background:rgba(255,255,255,.12)!important; }
 .sidebar-menu .nav-item{ border-bottom:3px solid transparent; }
@@ -462,4 +463,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
