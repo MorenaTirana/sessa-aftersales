@@ -75,9 +75,9 @@ aside[aria-label="sidebar"] .sidebar-menu .stButton>button{
   width:100%; text-align:left; background:transparent!important; color:#fff!important; border:0!important;
   padding:6px 10px!important; margin:0!important; border-radius:8px!important; box-shadow:none!important; font-weight:700!important;
 }
-.sidebar-menu .stButton>button:hover{ background:rgba(255,255,255,.12)!important; }
-.sidebar-menu .nav-item{ border-bottom:3px solid transparent; }
-.sidebar-menu .nav-item.active{ border-bottom:3px solid #fff; }               /* underline pagina attiva */
+.sidebar-menu .stButton>button:hover{ background:rgba(255,255,255,.18)!important; } /* hover più visibile */
+.sidebar-menu .nav-item{ border-bottom:0; }
+.sidebar-menu .nav-item.active .stButton>button{ border-bottom:3px solid #fff!important; } /* underline pagina attiva sul bottone */
 
 /* Bottoni d'azione NEL MAIN (non toccare quelli della sidebar) */
 [data-testid="stAppViewContainer"] .stButton>button{
@@ -463,5 +463,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
