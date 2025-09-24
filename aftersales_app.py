@@ -141,6 +141,11 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
     unsafe_allow_html=True,
 )
 
+/* Allinea il blocco blu con il logo in alto */
+:root{ --header-up:-24px; }                 /* prova -16 / -20 / -24 / -28 finché coincide */
+[data-testid="stAppViewContainer"] .main .block-container{ padding-top:0 !important; }
+.brand{ margin-top:var(--header-up) !important; }   /* spinge SU solo il blocco blu */
+
 # ───────────────────────────── DB ─────────────────────────────
 DATA_ROOT = "./data"
 DB_PATH = os.path.join(DATA_ROOT, "db", "aftersales.db")
