@@ -148,6 +148,19 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
 [data-testid="stAppViewContainer"] .stButton>button{
   background:var(--navy)!important; color:#fff!important; border:0!important; border-radius:10px!important; padding:10px 16px!important;
 }
+
+/* Expander senza barra bianca */
+[data-testid="stExpander"] details,
+[data-testid="stExpander"] details > summary{
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+[data-testid="stExpander"] details > summary{
+  padding: 0 !important;          /* niente fascia, resta solo il titolo */
+  min-height: 0 !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
