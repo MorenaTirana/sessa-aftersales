@@ -91,22 +91,30 @@ section[data-testid="stSidebar"] .sidebar-menu a.menu-item:active{
 /* ===== Header brand nel MAIN (logo a piena altezza) ===== */
 .brand{
   background:#3E79B3; color:#fff; border-radius:14px;
-  height:var(--brand-h);                 /* altezza esatta della fascia */
+  height:var(--brand-h);
   margin-top:var(--header-up) !important;
   margin-bottom:18px;
-  padding:10px 16px;                        /* niente padding verticale, il logo può arrivare ai bordi */
-  display:flex;                          /* mantiene layout in riga */
+  padding:0 16px;                 /* niente padding verticale */
+  display:flex;
 }
 .brand-row{
   display:flex; align-items:center; gap:16px;
-  width:100%; height:100%;               /* per consentire al logo l'altezza 100% */
+  width:100%; height:100%;
 }
 .brand-logo{
-  height:100%; width:auto;               /* il logo riempie tutta l'altezza della fascia */
-  object-fit:contain; display:block; border-radius:10px;
+  height:100%; width:auto; object-fit:contain; display:block; border-radius:10px;
 }
-.brand h1{ color:#fff!important; margin:0; }
-.brand small{ color:#fff!important; opacity:.95; }
+/* wrapper testo: centra verticalmente e riduce lo spazio tra h1 e small */
+.brand-text{
+  display:flex; flex-direction:column; justify-content:center; line-height:1;
+}
+.brand-text h1{ margin:0; line-height:1; }
+.brand-text small{
+  margin:0; line-height:1.05;
+  position:relative; top:-6px;   /* ← alza il sottotitolo; prova -4 / -8 se vuoi */
+  opacity:.95;
+}
+
 
 /* ====== Card ====== */
 .card{ background:#fff; border-radius:14px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.06); }
