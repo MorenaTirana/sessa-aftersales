@@ -162,6 +162,7 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
   border-radius: 0 !important;
   box-shadow: none !important;
   background-color:red;
+  height:2px;
 }
 
 </style>
