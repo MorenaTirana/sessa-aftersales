@@ -1,6 +1,6 @@
 # SESSA After Sales – sidebar blu Sessa + logo + menu compatto
-# Solo la pagina attiva è BOLD + UNDERLINE; le altre sono light e NON sottolineate.
-# Logo allineato in altezza con il blocco "SESSA AFTER SALES" e mostrato davanti al titolo nel main.
+# Pagina attiva: BOLD + UNDERLINE; inattive: light no underline.
+# Header blu più in alto (allineamento col logo) e logo nell'header a sinistra del titolo.
 
 import os, sqlite3, datetime as dt, base64
 import pandas as pd
@@ -19,8 +19,7 @@ LOGO = _find_logo()
 
 def _page_icon():
     try:
-        if LOGO:
-            return Image.open(LOGO)
+        if LOGO: return Image.open(LOGO)
     except Exception:
         pass
     return "⚓"
@@ -36,32 +35,42 @@ def _logo_data_uri():
 st.set_page_config(page_title="SESSA After Sales", page_icon=_page_icon(), layout="wide")
 
 # ───────────────────────────── CSS ─────────────────────────────
-st.markdown(
-    """
+st.markdown("""
 <style>
-:root{ --sessa:#3E79B3; --navy:#0b2a4a; --off:#F6F9FC; --sb-logo-top:5px!Important; --brand-h:150px; }
-.stApp, .main .block-container{ background:var(--off)!important; font-family:'Times New Roman', Times, serif!important; }
+:root{
+  --sessa:#3E79B3; --navy:#0b2a4a; --off:#F6F9FC;
+  --sb-logo-top:14px;        /* micro spostamento solo del logo in sidebar */
+  --menu-offset:96px;        /* distanza tra logo sidebar e blocco MENU */
+  --brand-h:96px;            /* altezza fascia blu header */
+  --header-up:-24px;         /* spingi SU il blocco blu: -20/-24/-28… */
+}
 
-/* --- SIDEBAR --- */
+.stApp, .main .block-container{
+  background:var(--off)!important;
+  font-family:'Times New Roman', Times, serif!important;
+}
+
+/* Riduci padding top del main, poi spingi su solo il blocco blu */
+[data-testid="stAppViewContainer"] .main .block-container{ padding-top:0 !important; }
+
+/* ====== SIDEBAR ====== */
 aside[aria-label="sidebar"], section[data-testid="stSidebar"]{ background:var(--sessa)!important; }
 aside[aria-label="sidebar"] *:not(input):not(textarea):not(select),
 section[data-testid="stSidebar"] *:not(input):not(textarea):not(select){ color:#fff!important; }
 aside[aria-label="sidebar"] img{ border-radius:12px; }
 
-/* Logo: resta dov'è ma lo abbassiamo/innalziamo finemente con --sb-logo-top */
+/* Logo sidebar: resta in alto; micro-tuning con --sb-logo-top */
 .sb-brand{ margin-top:var(--sb-logo-top)!important; margin-bottom:12px; }
 
-/* SOLO il blocco (MENU + lista) scende rispetto al logo */
-.sb-menu-wrap{ margin-top:96px !important; }  /* regola lo spazio logo→menu */
+/* Solo il blocco (MENU + lista) scende rispetto al logo */
+.sb-menu-wrap{ margin-top:var(--menu-offset) !important; }
 
-/* Titolo MENU */
 .sb-title{ font-weight:800; color:#fff; margin:0 0 8px 0; letter-spacing:.3px; }
 
-/* MENU: colonna senza pillole, spazi ridotti */
 .sidebar-menu{ display:flex; flex-direction:column; gap:6px; }
 .sidebar-menu .nav-item{ margin:0!important; border:0; }
 
-/* Link menu – default: NO underline e font light; stile finale anche inline */
+/* Link menu: default light no underline; lo stato attivo è gestito inline */
 aside[aria-label="sidebar"] .sidebar-menu a.menu-item,
 aside[aria-label="sidebar"] .sidebar-menu a.menu-item:link,
 aside[aria-label="sidebar"] .sidebar-menu a.menu-item:visited,
@@ -77,30 +86,23 @@ section[data-testid="stSidebar"] .sidebar-menu a.menu-item:active{
   font-size:0.95rem; line-height:1.15;
 }
 
-/* Bottoni nel MAIN */
-[data-testid="stAppViewContainer"] .stButton>button{
-  background:var(--navy)!important; color:#fff!important; border:0!important; border-radius:10px!important; padding:10px 16px!important;
-}
-
-/* ===== Header brand nel MAIN (con logo a sinistra) ===== */
+/* ====== HEADER BLU NEL MAIN ====== */
 .brand{
   background:#3E79B3; color:#fff; border-radius:14px;
   padding:14px 16px; margin-bottom:18px;
-  min-height:var(--brand-h);             /* ← altezza della fascia */
-  display:flex; align-items:center;      /* allinea verticalmente contenuti */
+  min-height:var(--brand-h);
+  display:flex; align-items:center;
+  margin-top:var(--header-up) !important; /* ↑ spinge su il blocco blu */
 }
-.brand-row{
-  display:flex; align-items:center; gap:16px; width:100%;
-}
+.brand-row{ display:flex; align-items:center; gap:16px; width:100%; }
 .brand-logo{
-  height:calc(var(--brand-h) - 28px);    /* 28px = padding verticale 14px*2 */
+  height:calc(var(--brand-h) - 28px); /* 28px = 14px padding top + 14px bottom */
   width:auto; object-fit:contain; border-radius:8px; display:block;
 }
 .brand h1{ color:#fff!important; margin:0; }
 .brand small{ color:#fff!important; opacity:.95; }
 
-
-/* Card */
+/* ====== Card ====== */
 .card{ background:#fff; border-radius:14px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.06); }
 .card.no-bg{ background:transparent; box-shadow:none; padding:0; }
 
@@ -127,33 +129,19 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
   background:#fff!important; color:#111!important; -webkit-text-fill-color:#111!important; caret-color:#111!important;
   border:1px solid #d0d6df!important; border-radius:10px!important; box-shadow:none!important;
 }
-st.markdown("""
 
-
-/* Alza il blocco blu e allinealo al logo */
-[data-testid="stAppViewContainer"] .main .block-container{
-  padding-top: 0 !important;
+/* Bottoni nel MAIN */
+[data-testid="stAppViewContainer"] .stButton>button{
+  background:var(--navy)!important; color:#fff!important; border:0!important; border-radius:10px!important; padding:10px 16px!important;
 }
-.brand{
-  margin-top: 2px !important;   /* prova -20 / -24 / -28 per centrare perfettamente */
-}
-
 </style>
-""",
-    unsafe_allow_html=True,
-)
-
-/* Allinea il blocco blu con il logo in alto */
-:root{ --header-up:-24px; }                 /* prova -16 / -20 / -24 / -28 finché coincide */
-[data-testid="stAppViewContainer"] .main .block-container{ padding-top:0 !important; }
-.brand{ margin-top:var(--header-up) !important; }   /* spinge SU solo il blocco blu */
+""", unsafe_allow_html=True)
 
 # ───────────────────────────── DB ─────────────────────────────
 DATA_ROOT = "./data"
-DB_PATH = os.path.join(DATA_ROOT, "db", "aftersales.db")
-UPLOADS = os.path.join(DATA_ROOT, "uploads")
-for d in (os.path.dirname(DB_PATH), UPLOADS):
-    os.makedirs(d, exist_ok=True)
+DB_PATH   = os.path.join(DATA_ROOT, "db", "aftersales.db")
+UPLOADS   = os.path.join(DATA_ROOT, "uploads")
+for d in (os.path.dirname(DB_PATH), UPLOADS): os.makedirs(d, exist_ok=True)
 
 def get_conn():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
@@ -161,100 +149,81 @@ def get_conn():
 
 def ensure_schema(conn: sqlite3.Connection):
     c = conn.cursor()
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS wir(
+    c.execute("""CREATE TABLE IF NOT EXISTS wir(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         created_at TEXT, dealer TEXT, boat TEXT,
         title TEXT, description TEXT, brand TEXT, serial TEXT,
         full_name TEXT, email TEXT, phone TEXT,
         boat_model TEXT, hull_serial TEXT,
         warranty_start TEXT, boat_location TEXT, onboard_contact TEXT
-    )"""
-    )
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS spr(
+    )""")
+    c.execute("""CREATE TABLE IF NOT EXISTS spr(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         created_at TEXT, dealer TEXT, boat TEXT,
         description TEXT, item_brand TEXT, item_serial TEXT,
         full_name TEXT, email TEXT, phone TEXT,
         boat_model TEXT, hull_serial TEXT,
         boat_location TEXT, onboard_contact TEXT
-    )"""
-    )
+    )""")
     conn.commit()
 
 def df_read(conn, table):
-    try:
-        return pd.read_sql_query(f"SELECT * FROM {table} ORDER BY id DESC", conn)
-    except Exception:
-        return pd.DataFrame()
+    try: return pd.read_sql_query(f"SELECT * FROM {table} ORDER BY id DESC", conn)
+    except Exception: return pd.DataFrame()
 
 # ───────────────────────────── UI helpers ─────────────────────────────
 @contextmanager
-def card(cls: str = ""):
+def card(cls: str=""):
     st.markdown(f'<div class="card {cls}">', unsafe_allow_html=True)
-    try:
-        yield
-    finally:
-        st.markdown("</div>", unsafe_allow_html=True)
+    try: yield
+    finally: st.markdown('</div>', unsafe_allow_html=True)
 
 def header():
     """Header blu con logo a sinistra del testo."""
     logo_uri = _logo_data_uri()
     img_html = f'<img class="brand-logo" src="{logo_uri}" alt="logo"/>' if logo_uri else ""
-    st.markdown(
-        f'''
-        <div class="brand">
-          <div class="brand-row">
-            {img_html}
-            <div>
-              <h1>SESSA AFTER SALES</h1>
-              <small>After Sales Dashboard</small>
-            </div>
+    st.markdown(f'''
+      <div class="brand">
+        <div class="brand-row">
+          {img_html}
+          <div>
+            <h1>SESSA AFTER SALES</h1>
+            <small>After Sales Dashboard</small>
           </div>
         </div>
-        ''',
-        unsafe_allow_html=True,
-    )
+      </div>
+    ''', unsafe_allow_html=True)
 
 def sidebar_brand():
     st.markdown('<div class="sb-brand">', unsafe_allow_html=True)
-    if LOGO:
-        st.image(LOGO, use_container_width=True)
-    else:
-        st.markdown('<h3 style="margin:0;color:#fff">SESSA AFTER SALES</h3>', unsafe_allow_html=True)
+    if LOGO: st.image(LOGO, use_container_width=True)
+    else:    st.markdown('<h3 style="margin:0;color:#fff">SESSA AFTER SALES</h3>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ───────────────────────────── Login ─────────────────────────────
 def require_auth() -> bool:
     """Bypass con ?demo=1. Se APP_USER/APP_PASS assenti → no login (locale)."""
-    def _truthy(x): return str(x).strip().lower() in ("1","true","yes","on")
+    def _t(x): return str(x).strip().lower() in ("1","true","yes","on")
 
-    # BYPASS DEMO
-    demo = _truthy(os.environ.get("DEMO", "0"))
+    demo = _t(os.environ.get("DEMO", "0"))
     try:
-        if "DEMO" in st.secrets: demo = demo or _truthy(st.secrets["DEMO"])
-    except Exception:
-        pass
+        if "DEMO" in st.secrets: demo = demo or _t(st.secrets["DEMO"])
+    except Exception: pass
     try:
-        demo = demo or _truthy(st.query_params.get("demo", "0"))
+        demo = demo or _t(st.query_params.get("demo", "0"))
     except Exception:
-        try:
-            demo = demo or _truthy(st.experimental_get_query_params().get("demo", ["0"])[0])
-        except Exception:
-            pass
+        try:    demo = demo or _t(st.experimental_get_query_params().get("demo", ["0"])[0])
+        except Exception: pass
     if demo:
         st.session_state.auth_ok = True
         st.session_state.auth_user = "demo"
         return True
 
-    # CREDENZIALI
     USER = PASS = ""
     try:
         if "APP_USER" in st.secrets: USER = str(st.secrets["APP_USER"]).strip()
         if "APP_PASS" in st.secrets: PASS = str(st.secrets["APP_PASS"]).strip()
-    except Exception:
-        pass
+    except Exception: pass
     USER = os.environ.get("APP_USER", USER).strip()
     PASS = os.environ.get("APP_PASS", PASS).strip()
 
@@ -263,8 +232,7 @@ def require_auth() -> bool:
         st.session_state.auth_user = "dev"
         return True
 
-    if st.session_state.get("auth_ok"):
-        return True
+    if st.session_state.get("auth_ok"): return True
 
     with st.sidebar:
         sidebar_brand()
@@ -276,7 +244,7 @@ def require_auth() -> bool:
 
         if st.button("Entra", use_container_width=True, key="login_btn"):
             if user.strip() == USER and pwd == PASS:
-                st.session_state.auth_ok = True
+                st.session_state.auth_ok  = True
                 st.session_state.auth_user = user.strip() or "guest"
                 try: st.rerun()
                 except Exception: st.experimental_rerun()
@@ -332,54 +300,42 @@ def section_spr(conn):
 
 def section_clienti(conn):
     st.subheader("CLIENTI")
-    with card():
-        st.write("Anagrafica Clienti.")
+    with card(): st.write("Anagrafica Clienti.")
 
 def section_dealer(conn):
     st.subheader("DEALER")
-    with card():
-        st.write("Anagrafica Dealer.")
+    with card(): st.write("Anagrafica Dealer.")
 
 def section_ddt033(conn):
     st.subheader("DOCUMENTI GARANZIE")
-    with card():
-        st.write("Documenti Garanzie.")
+    with card(): st.write("Documenti Garanzie.")
 
 def section_ddt006(conn):
     st.subheader("DOCUMENTI VENDITE")
-    with card():
-        st.write("Documenti Vendite.")
+    with card(): st.write("Documenti Vendite.")
 
 def section_quotes_invoices(conn):
     st.subheader("€ RIPARAZIONI")
-    with card():
-        st.write("Preventivi / Fatture.")
+    with card(): st.write("Preventivi / Fatture.")
 
 def section_trips(conn):
     st.subheader("TRASFERTE")
-    with card():
-        st.write("Trasferte.")
+    with card(): st.write("Trasferte.")
 
 def section_boats(conn):
     st.subheader("BARCHE")
-    with card():
-        st.write("Archivio barche.")
+    with card(): st.write("Archivio barche.")
 
 def section_storico(conn):
     st.subheader("STORICO PRATICHE")
     dfw, dfs = df_read(conn, "wir"), df_read(conn, "spr")
     if (dfw is None or dfw.empty) and (dfs is None or dfs.empty):
-        with card():
-            st.info("Ancora nessuna pratica presente.")
+        with card(): st.info("Ancora nessuna pratica presente.")
         return
     if dfw is not None and not dfw.empty:
-        st.markdown("### WIR")
-        with card():
-            st.dataframe(dfw, use_container_width=True)
+        st.markdown("### WIR");  with card(): st.dataframe(dfw, use_container_width=True)
     if dfs is not None and not dfs.empty:
-        st.markdown("### SPR")
-        with card():
-            st.dataframe(dfs, use_container_width=True)
+        st.markdown("### SPR");  with card(): st.dataframe(dfs, use_container_width=True)
 
 # ───────────────────────────── Routing ─────────────────────────────
 PAGES = {
@@ -394,43 +350,34 @@ def get_current_page():
     current = st.session_state.get("nav")
     try:
         qp = st.query_params
-        if not current:
-            current = qp.get("nav", keys[0])
-        if isinstance(current, list):
-            current = current[0]
+        if not current: current = qp.get("nav", keys[0])
+        if isinstance(current, list): current = current[0]
     except Exception:
         try:
             qp = st.experimental_get_query_params()
-            if not current:
-                current = qp.get("nav", [keys[0]])[0]
+            if not current: current = qp.get("nav", [keys[0]])[0]
         except Exception:
             current = keys[0]
     if current not in PAGES:
         current = keys[0]
         st.session_state.nav = current
-        try:
-            st.query_params.update({"nav": current})
-        except Exception:
-            st.experimental_set_query_params(nav=current)
+        try: st.query_params.update({"nav": current})
+        except Exception: st.experimental_set_query_params(nav=current)
     return current
 
 def render_sidebar_menu(current):
     from urllib.parse import urlencode
 
-    def _query_dict():
-        try:
-            return dict(st.query_params)
-        except Exception:
-            return {k: (v[0] if isinstance(v, list) else v) for k, v in st.experimental_get_query_params().items()}
+    def _qp_dict():
+        try: return dict(st.query_params)
+        except Exception: return {k: (v[0] if isinstance(v, list) else v) for k,v in st.experimental_get_query_params().items()}
 
-    def _href_for(page: str) -> str:
-        q = _query_dict()
-        q["nav"] = page
-        return "?" + urlencode(q)
+    def _href_for(page:str)->str:
+        q = _qp_dict(); q["nav"] = page; return "?" + urlencode(q)
 
     with st.sidebar:
         sidebar_brand()
-        st.markdown('<div class="sb-menu-wrap">', unsafe_allow_html=True)  # solo il menu va più giù
+        st.markdown('<div class="sb-menu-wrap">', unsafe_allow_html=True)
         st.markdown('<div class="sb-title">MENU</div>', unsafe_allow_html=True)
         st.markdown('<div class="sidebar-menu">', unsafe_allow_html=True)
         for page in PAGES.keys():
@@ -439,12 +386,11 @@ def render_sidebar_menu(current):
             style_inactive = "font-weight:300;opacity:.70;text-decoration:none;"
             style = style_active if active else style_inactive
             st.markdown(
-                f'<div class="nav-item"><a class="menu-item {"active" if active else ""}" '
-                f'href="{_href_for(page)}" target="_self" style="{style}">{page}</a></div>',
+                f'<div class="nav-item"><a class="menu-item {"active" if active else ""}" href="{_href_for(page)}" target="_self" style="{style}">{page}</a></div>',
                 unsafe_allow_html=True
             )
-        st.markdown("</div>", unsafe_allow_html=True)  # .sidebar-menu
-        st.markdown("</div>", unsafe_allow_html=True)  # .sb-menu-wrap
+        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
 # ───────────────────────────── Main ─────────────────────────────
 def main():
