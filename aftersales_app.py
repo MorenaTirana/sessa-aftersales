@@ -8,6 +8,10 @@ import pandas as pd
 import streamlit as st
 from PIL import Image
 from contextlib import contextmanager
+# Intervallo date consentito
+DATE_MIN_1958 = dt.date(1958, 1, 1)
+DATE_MAX_FAR  = dt.date(2100, 12, 31)   # puoi alzarlo/abbassarlo se vuoi
+
 
 # ───────────────────────────── Page config ─────────────────────────────
 def _find_logo():
@@ -395,7 +399,10 @@ def section_wir(conn):
     st.markdown("### DATI")
     with card("no-bg"):
         c = st.columns(4)
-        c[0].date_input("Data", dt.date.today(), key="wir_date")
+        c[0].date_input("Data",
+                value=dt.date.today(),
+                min_value=DATE_MIN_1958, max_value=DATE_MAX_FAR,
+                key="wir_date")
         c[1].text_input("Nome & Cognome *", key="wir_fullname")
         c[2].text_input("Dealer *", key="wir_dealer")
         c[3].text_input("E-mail *", key="wir_email")
@@ -403,7 +410,10 @@ def section_wir(conn):
         c2[0].text_input("Cellulare *", key="wir_phone")
         c2[1].text_input("Modello di barca *", key="wir_boat_model")
         c2[2].text_input("Matricola nr *", key="wir_hull")
-        c2[3].date_input("Data attivazione garanzia *", dt.date.today(), key="wir_wstart")
+        c2[3].date_input("Data attivazione garanzia *",
+                 value=dt.date.today(),
+                 min_value=DATE_MIN_1958, max_value=DATE_MAX_FAR,
+                 key="wir_wstart")
         c3 = st.columns(2)
         c3[0].text_input("Locazione barca", key="wir_loc")
         c3[1].text_input("Contatto a bordo", key="wir_onboard")
@@ -532,7 +542,11 @@ def section_spr(conn):
     st.markdown("### DATI")
     with card():
         c = st.columns(4)
-        c[0].date_input("Data", dt.date.today(), key="spr_date")
+       c[0].date_input("Data",
+                value=dt.date.today(),
+                min_value=DATE_MIN_1958, max_value=DATE_MAX_FAR,
+                key="spr_date")
+
         c[1].text_input("Nome & Cognome *", key="spr_fullname")
         c[2].text_input("Dealer *", key="spr_dealer")
         c[3].text_input("E-mail *", key="spr_email")
