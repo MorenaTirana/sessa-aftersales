@@ -127,6 +127,15 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
   background:#fff!important; color:#111!important; -webkit-text-fill-color:#111!important; caret-color:#111!important;
   border:1px solid #d0d6df!important; border-radius:10px!important; box-shadow:none!important;
 }
+
+/* Alza il blocco blu (riduce lo spazio bianco sopra) */
+[data-testid="stAppViewContainer"] .main .block-container{
+  padding-top: 8px !important;   /* prova 0–16px per regolare finemente */
+}
+
+/* (facoltativo) assicura che il blocco blu non aggiunga altro spazio sopra */
+.brand{ margin-top: 0 !important; }
+
 </style>
 """,
     unsafe_allow_html=True,
