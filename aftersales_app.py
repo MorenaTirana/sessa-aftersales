@@ -49,15 +49,34 @@ aside[aria-label="sidebar"] img{ border-radius:12px; }
 .sidebar-menu .nav-item{ margin:0!important; border:0; }
 
 /* Link voci menu (niente pillole) */
+/* Voci menu: NO underline di default (tutti gli stati), light font */
 aside[aria-label="sidebar"] .sidebar-menu a.menu-item,
-section[data-testid="stSidebar"] .sidebar-menu a.menu-item{
-  display:block; padding:6px 8px; text-decoration:none !important; color:#fff !important; border:0; border-radius:0;
-  font-size:0.95rem; line-height:1.15; font-weight:400 !important; opacity:.65; cursor:pointer;
+aside[aria-label="sidebar"] .sidebar-menu a.menu-item:link,
+aside[aria-label="sidebar"] .sidebar-menu a.menu-item:visited,
+aside[aria-label="sidebar"] .sidebar-menu a.menu-item:hover,
+aside[aria-label="sidebar"] .sidebar-menu a.menu-item:active,
+section[data-testid="stSidebar"] .sidebar-menu a.menu-item,
+section[data-testid="stSidebar"] .sidebar-menu a.menu-item:link,
+section[data-testid="stSidebar"] .sidebar-menu a.menu-item:visited,
+section[data-testid="stSidebar"] .sidebar-menu a.menu-item:hover,
+section[data-testid="stSidebar"] .sidebar-menu a.menu-item:active{
+  display:block; padding:6px 8px; border:0; border-radius:0; cursor:pointer;
+  text-decoration:none !important; color:#fff !important;
+  font-size:0.95rem; line-height:1.15; font-weight:300 !important; opacity:.70;
 }
-.sidebar-menu a.menu-item:hover{ background:rgba(255,255,255,.08); }
+/* Solo la pagina attiva: bold + underline spesso */
 aside[aria-label="sidebar"] .sidebar-menu a.menu-item.active,
-section[data-testid="stSidebar"] .sidebar-menu a.menu-item.active{
-  opacity:1 !important; font-weight:800 !important; text-decoration:underline !important; text-decoration-thickness:3px; text-underline-offset:3px;
+aside[aria-label="sidebar"] .sidebar-menu a.menu-item.active:link,
+aside[aria-label="sidebar"] .sidebar-menu a.menu-item.active:visited,
+aside[aria-label="sidebar"] .sidebar-menu a.menu-item.active:hover,
+aside[aria-label="sidebar"] .sidebar-menu a.menu-item.active:active,
+section[data-testid="stSidebar"] .sidebar-menu a.menu-item.active,
+section[data-testid="stSidebar"] .sidebar-menu a.menu-item.active:link,
+section[data-testid="stSidebar"] .sidebar-menu a.menu-item.active:visited,
+section[data-testid="stSidebar"] .sidebar-menu a.menu-item.active:hover,
+section[data-testid="stSidebar"] .sidebar-menu a.menu-item.active:active{
+  opacity:1 !important; font-weight:800 !important;
+  text-decoration:underline !important; text-decoration-thickness:3px; text-underline-offset:3px;
 }
 
 /* Bottone ENTRA (solo login) — ripristino stile */
@@ -492,6 +511,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
