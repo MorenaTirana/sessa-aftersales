@@ -340,7 +340,6 @@ left, center, right = st.columns([1, 1, 1])
 save_clicked = center.button("💾 Salva & Genera Modulo", key="wir_save")
 
 if save_clicked:
-    ...
 
         # Validazione campi obbligatori intestazione
         errors = []
