@@ -156,9 +156,11 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
   border: 0 !important;
   box-shadow: none !important;
 }
-[data-testid="stExpander"] details > summary{
-  padding: 0 !important;          /* niente fascia, resta solo il titolo */
-  min-height: 0 !important;
+
+/* Card senza bordo arrotondato visibile */
+.card{
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
 </style>
