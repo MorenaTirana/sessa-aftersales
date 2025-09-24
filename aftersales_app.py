@@ -106,7 +106,9 @@ section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textare
   background:#fff!important; color:#111!important; -webkit-text-fill-color:#111!important; caret-color:#111!important;
   border:1px solid #d0d6df!important; border-radius:10px!important; box-shadow:none!important;
 }
-aside[aria-label="sidebar"] .sb-brand{ margin-top:clamp(12px, 2.5vh, 32px) !important; }
+/* Abbassa solo il logo in sidebar */
+
+aside[aria-label="sidebar"] .sb-brand{ margin-top:20px !important; }
 
 </style>
 """,
