@@ -274,7 +274,7 @@ def ensure_schema(conn: sqlite3.Connection):
         boat_location TEXT, onboard_contact TEXT
     )""")
 
-    # --- NUOVE TABELLE CLIENTI ---
+    # --- CLIENTI base ---
     c.execute("""CREATE TABLE IF NOT EXISTS clients(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         created_at TEXT,
@@ -288,10 +288,11 @@ def ensure_schema(conn: sqlite3.Connection):
         garanzia_start TEXT, garanzia_end TEXT
     )""")
 
+    # --- Fatture/DDT GENERALI (se già avevi queste tabelle lasciale così) ---
     c.execute("""CREATE TABLE IF NOT EXISTS client_invoices(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         client_id INTEGER,
-        status TEXT,            -- 'Pagata' | 'Fornita' | 'Da pagare'
+        status TEXT,
         filename TEXT, file_path TEXT,
         uploaded_at TEXT
     )""")
@@ -299,7 +300,7 @@ def ensure_schema(conn: sqlite3.Connection):
     c.execute("""CREATE TABLE IF NOT EXISTS client_ddt(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         client_id INTEGER,
-        tipo TEXT,              -- 'Garanzia' | 'Vendita'
+        tipo TEXT,
         filename TEXT, file_path TEXT,
         uploaded_at TEXT
     )""")
@@ -310,6 +311,59 @@ def ensure_schema(conn: sqlite3.Connection):
         date_from TEXT, date_to TEXT,
         modello TEXT, hull TEXT, locazione TEXT,
         costo REAL
+    )""")
+    # colonna opzionale per marcare le trasferte "in garanzia"
+    try:
+        c.execute("ALTER TABLE client_trips ADD COLUMN in_warranty INTEGER DEFAULT 0")
+    except Exception:
+        pass
+
+    # --- RICAMBI ---
+    c.execute("""CREATE TABLE IF NOT EXISTS client_spare_requests(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER,
+        created_at TEXT,
+        modello TEXT, hull TEXT,
+        descrizione TEXT, brand TEXT, seriale TEXT,
+        stato TEXT, note TEXT
+    )""")
+
+    c.execute("""CREATE TABLE IF NOT EXISTS client_spare_invoices(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER,
+        filename TEXT, file_path TEXT,
+        uploaded_at TEXT
+    )""")
+
+    c.execute("""CREATE TABLE IF NOT EXISTS client_spare_sales(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER,
+        filename TEXT, file_path TEXT,
+        uploaded_at TEXT
+    )""")
+
+    # --- SERVIZI IN GARANZIA ---
+    c.execute("""CREATE TABLE IF NOT EXISTS client_warranty_requests(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER,
+        created_at TEXT,
+        modello TEXT, hull TEXT,
+        descrizione TEXT, brand TEXT, seriale TEXT,
+        stato TEXT, note TEXT
+    )""")
+
+    c.execute("""CREATE TABLE IF NOT EXISTS client_warranty_invoices(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER,
+        filename TEXT, file_path TEXT,
+        uploaded_at TEXT
+    )""")
+
+    c.execute("""CREATE TABLE IF NOT EXISTS client_warranty_materials(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER,
+        created_at TEXT,
+        descrizione TEXT, qta REAL, costo REAL, note TEXT
     )""")
 
     conn.commit()
@@ -754,7 +808,7 @@ def section_spr(conn):
 def section_clienti(conn):
     st.subheader("CLIENTI")
 
-    # Leggi elenco clienti
+    # Elenco clienti
     df_clients = pd.read_sql_query(
         "SELECT id, nome, cognome, email, telefono, indirizzo FROM clients ORDER BY cognome, nome",
         conn
@@ -763,34 +817,32 @@ def section_clienti(conn):
     id_map = {options[0]: 0}
     for _, r in df_clients.iterrows():
         label = f"{r['cognome']} {r['nome']} — {r['email'] or ''} (#{r['id']})"
-        options.append(label)
-        id_map[label] = int(r["id"])
+        options.append(label); id_map[label] = int(r["id"])
 
-    # Selezione / creazione cliente
     with card("no-bg"):
         sel = st.selectbox("Seleziona cliente", options, key="cli_select")
         client_id = id_map[sel]
 
-    # Dati cliente (crea o aggiorna)
+    # Dati cliente
     st.markdown("### DATI CLIENTE")
     with card("no-bg"):
         if client_id:
             r = pd.read_sql_query("SELECT * FROM clients WHERE id=?", conn, params=[client_id]).iloc[0]
-            nome_val, cognome_val = r["nome"] or "", r["cognome"] or ""
-            tel_val, mail_val = r["telefono"] or "", r["email"] or ""
-            ind_val = r["indirizzo"] or ""
+            nome_v, cognome_v = r["nome"] or "", r["cognome"] or ""
+            tel_v, mail_v = r["telefono"] or "", r["email"] or ""
+            ind_v = r["indirizzo"] or ""
             save_label = "💾 Aggiorna Cliente"
         else:
-            nome_val = cognome_val = tel_val = mail_val = ind_val = ""
+            nome_v = cognome_v = tel_v = mail_v = ind_v = ""
             save_label = "💾 Salva Nuovo Cliente"
 
         c1, c2 = st.columns(2)
-        nome = c1.text_input("Nome", value=nome_val, key="cli_nome")
-        cognome = c2.text_input("Cognome", value=cognome_val, key="cli_cognome")
+        nome = c1.text_input("Nome", value=nome_v, key="cli_nome")
+        cognome = c2.text_input("Cognome", value=cognome_v, key="cli_cognome")
         c3, c4 = st.columns(2)
-        telefono = c3.text_input("Telefono", value=tel_val, key="cli_telefono")
-        email = c4.text_input("E-mail", value=mail_val, key="cli_email")
-        indirizzo = st.text_input("Indirizzo", value=ind_val, key="cli_indirizzo")
+        telefono = c3.text_input("Telefono", value=tel_v, key="cli_telefono")
+        email = c4.text_input("E-mail", value=mail_v, key="cli_email")
+        indirizzo = st.text_input("Indirizzo", value=ind_v, key="cli_indirizzo")
 
         if st.button(save_label, key="cli_save"):
             now = dt.datetime.now().isoformat(timespec="seconds")
@@ -800,121 +852,232 @@ def section_clienti(conn):
                     [now, nome, cognome, telefono, email, indirizzo]
                 )
                 st.session_state.cli_select = f"{cognome} {nome} — {email or ''} (#{cur.lastrowid})"
-                st.success("✅ Cliente creato.")
-                st.rerun()
+                st.success("✅ Cliente creato."); st.rerun()
             else:
                 run_sql(conn,
                     "UPDATE clients SET nome=?, cognome=?, telefono=?, email=?, indirizzo=? WHERE id=?",
                     [nome, cognome, telefono, email, indirizzo, client_id]
                 )
-                st.success("✅ Dati cliente aggiornati.")
-                st.rerun()
+                st.success("✅ Dati cliente aggiornati."); st.rerun()
 
-    # Se non c'è un cliente selezionato, fermiamoci qui
     if client_id == 0:
         return
 
-    # ====================== BARCHE ======================
-    st.markdown("### BARCHE COMPRATE")
+    # =============== BARCHE ACQUISTATE ===============
+    st.markdown("### BARCHE ACQUISTATE")
     with card("no-bg"):
-        cb1, cb2, cb3 = st.columns([2, 1, 1])
-        modello = cb1.text_input("Modello barca", key="cb_modello")
-        hull = cb2.text_input("Hull n.", key="cb_hull")
-        anno = cb3.number_input("Anno di produzione", min_value=1900, max_value=2100, step=1, value=dt.date.today().year, key="cb_anno")
+        cb1, cb2, cb3 = st.columns([2,1,1])
+        b_mod = cb1.text_input("Modello barca", key="cb_mod")
+        b_hull = cb2.text_input("Hull n.", key="cb_hull")
+        b_anno = cb3.number_input("Anno di produzione", min_value=1900, max_value=2100,
+                                  value=dt.date.today().year, step=1, key="cb_anno")
         cgd1, cgd2 = st.columns(2)
-        gar_start = cgd1.date_input("Data attivazione garanzia", value=dt.date.today(),
-                                    min_value=DATE_MIN_1958, max_value=DATE_MAX_FAR, key="cb_gar_start")
-        gar_end = cgd2.date_input("Fine garanzia", value=dt.date.today(),
-                                  min_value=DATE_MIN_1958, max_value=DATE_MAX_FAR, key="cb_gar_end")
+        b_gstart = cgd1.date_input("Data attivazione garanzia", value=dt.date.today(),
+                                   min_value=DATE_MIN_1958, max_value=DATE_MAX_FAR, key="cb_gar_start")
+        b_gend   = cgd2.date_input("Fine garanzia", value=dt.date.today(),
+                                   min_value=DATE_MIN_1958, max_value=DATE_MAX_FAR, key="cb_gar_end")
+
         if st.button("➕ Aggiungi Barca", key="cb_add"):
             run_sql(conn,
                 "INSERT INTO client_boats(client_id, modello, hull, anno, garanzia_start, garanzia_end) VALUES (?,?,?,?,?,?)",
-                [client_id, modello, hull, int(anno), str(gar_start), str(gar_end)]
+                [client_id, b_mod, b_hull, int(b_anno), str(b_gstart), str(b_gend)]
             )
-            st.success("✅ Barca aggiunta.")
-            st.rerun()
+            st.success("✅ Barca aggiunta."); st.rerun()
 
-        df_boats = pd.read_sql_query("SELECT modello, hull, anno, garanzia_start AS 'garanzia da', garanzia_end AS 'garanzia a' FROM client_boats WHERE client_id=? ORDER BY id DESC",
-                                     conn, params=[client_id])
+        df_boats = pd.read_sql_query(
+            "SELECT modello, hull, anno, garanzia_start AS 'garanzia da', garanzia_end AS 'garanzia a' "
+            "FROM client_boats WHERE client_id=? ORDER BY id DESC",
+            conn, params=[client_id]
+        )
         if not df_boats.empty:
             st.dataframe(df_boats, use_container_width=True)
 
-    # ====================== FATTURE ======================
-    st.markdown("### FATTURE")
+    # =============== RICAMBI ===============
+    st.markdown("### RICAMBI — Richieste")
     with card("no-bg"):
-        s1, s2 = st.columns([1, 3])
-        status = s1.selectbox("Stato", ["Pagata", "Fornita", "Da pagare"], key="inv_status")
-        inv_files = s2.file_uploader("Aggiungi file (PDF, Word, PNG, JPG)",
-                                     type=["pdf", "doc", "docx", "png", "jpg", "jpeg"],
-                                     accept_multiple_files=True, key="inv_files")
-        if st.button("📎 Carica Fatture", key="inv_upload"):
-            folder = _client_upload_dir(client_id, "invoices")
-            saved = _save_uploaded_files(inv_files, folder, f"invoice_{client_id}")
+        rr1, rr2 = st.columns(2)
+        r_mod = rr1.text_input("Modello barca", key="sr_mod")
+        r_hull = rr2.text_input("Hull n.", key="sr_hull")
+        r_desc = st.text_area("Descrizione", key="sr_desc")
+        r3, r4, r5 = st.columns(3)
+        r_brand = r3.text_input("Marchio", key="sr_brand")
+        r_ser   = r4.text_input("Articolo / N. Serie", key="sr_ser")
+        r_state = r5.selectbox("Stato", ["Aperta","In lavorazione","Evaso"], key="sr_state")
+        r_note  = st.text_input("Note", key="sr_note")
+
+        if st.button("➕ Aggiungi Richiesta Ricambi", key="sr_add"):
             now = dt.datetime.now().isoformat(timespec="seconds")
-            for p in saved:
-                run_sql(conn,
-                    "INSERT INTO client_invoices(client_id, status, filename, file_path, uploaded_at) VALUES (?,?,?,?,?)",
-                    [client_id, status, os.path.basename(p), p, now]
-                )
-            st.success(f"✅ Caricate {len(saved)} fatture.")
-            st.rerun()
-
-        df_inv = pd.read_sql_query("SELECT status, filename, uploaded_at FROM client_invoices WHERE client_id=? ORDER BY id DESC",
-                                   conn, params=[client_id])
-        if not df_inv.empty:
-            st.dataframe(df_inv, use_container_width=True)
-
-    # ====================== DDT ======================
-    st.markdown("### DDT")
-    with card("no-bg"):
-        d1, d2 = st.columns([1, 3])
-        tipo = d1.selectbox("Tipo", ["Garanzia", "Vendita"], key="ddt_tipo")
-        ddt_files = d2.file_uploader("Aggiungi file (PDF, Word, PNG, JPG)",
-                                     type=["pdf", "doc", "docx", "png", "jpg", "jpeg"],
-                                     accept_multiple_files=True, key="ddt_files")
-        if st.button("📎 Carica DDT", key="ddt_upload"):
-            folder = _client_upload_dir(client_id, "ddt")
-            saved = _save_uploaded_files(ddt_files, folder, f"ddt_{client_id}")
-            now = dt.datetime.now().isoformat(timespec="seconds")
-            for p in saved:
-                run_sql(conn,
-                    "INSERT INTO client_ddt(client_id, tipo, filename, file_path, uploaded_at) VALUES (?,?,?,?,?)",
-                    [client_id, tipo, os.path.basename(p), p, now]
-                )
-            st.success(f"✅ Caricati {len(saved)} DDT.")
-            st.rerun()
-
-        df_ddt = pd.read_sql_query("SELECT tipo, filename, uploaded_at FROM client_ddt WHERE client_id=? ORDER BY id DESC",
-                                   conn, params=[client_id])
-        if not df_ddt.empty:
-            st.dataframe(df_ddt, use_container_width=True)
-
-    # ====================== TRASFERTE ======================
-    st.markdown("### TRASFERTE")
-    with card("no-bg"):
-        t1, t2 = st.columns(2)
-        date_from = t1.date_input("Dal", value=dt.date.today(), min_value=DATE_MIN_1958, max_value=DATE_MAX_FAR, key="tr_from")
-        date_to   = t2.date_input("Al",  value=dt.date.today(), min_value=DATE_MIN_1958, max_value=DATE_MAX_FAR, key="tr_to")
-        tt1, tt2 = st.columns(2)
-        t_model  = tt1.text_input("Modello barca in trasferta", key="tr_mod")
-        t_hull   = tt2.text_input("Hull n. barca", key="tr_hull")
-        t_loc    = st.text_input("Locazione", key="tr_loc")
-        t_costo  = st.number_input("Costo trasferta (€)", min_value=0.0, step=50.0, key="tr_cost")
-
-        if st.button("➕ Aggiungi Trasferta", key="tr_add"):
             run_sql(conn,
-                "INSERT INTO client_trips(client_id, date_from, date_to, modello, hull, locazione, costo) VALUES (?,?,?,?,?,?,?)",
-                [client_id, str(date_from), str(date_to), t_model, t_hull, t_loc, float(t_costo)]
+                "INSERT INTO client_spare_requests(client_id, created_at, modello, hull, descrizione, brand, seriale, stato, note) "
+                "VALUES (?,?,?,?,?,?,?,?,?)",
+                [client_id, now, r_mod, r_hull, r_desc, r_brand, r_ser, r_state, r_note]
             )
-            st.success("✅ Trasferta aggiunta.")
-            st.rerun()
+            st.success("✅ Richiesta ricambi aggiunta."); st.rerun()
 
-        df_tr = pd.read_sql_query(
-            "SELECT date_from AS 'Dal', date_to AS 'Al', modello, hull, locazione, costo FROM client_trips WHERE client_id=? ORDER BY id DESC",
+        df_sr = pd.read_sql_query(
+            "SELECT created_at AS data, modello, hull, brand, seriale, stato, descrizione "
+            "FROM client_spare_requests WHERE client_id=? ORDER BY id DESC",
             conn, params=[client_id]
         )
-        if not df_tr.empty:
-            st.dataframe(df_tr, use_container_width=True)
+        if not df_sr.empty:
+            st.dataframe(df_sr, use_container_width=True)
+
+    st.markdown("### RICAMBI — Fatture & Vendite")
+    with card("no-bg"):
+        c_up1, c_up2 = st.columns(2)
+        inv_files = c_up1.file_uploader("Fatture Ricambi (PDF, Word, PNG, JPG)",
+                                        type=["pdf","doc","docx","png","jpg","jpeg"],
+                                        accept_multiple_files=True, key="spinv")
+        sale_files = c_up2.file_uploader("Vendite Ricambi (PDF, Word, PNG, JPG)",
+                                         type=["pdf","doc","docx","png","jpg","jpeg"],
+                                         accept_multiple_files=True, key="spsale")
+        u1, u2 = st.columns(2)
+        if u1.button("📎 Carica Fatture Ricambi", key="spinv_btn"):
+            folder = os.path.join(UPLOADS, "clients", str(client_id), "spares", "invoices")
+            os.makedirs(folder, exist_ok=True)
+            saved = _save_uploaded_files(inv_files, folder, f"spinv_{client_id}")
+            now = dt.datetime.now().isoformat(timespec="seconds")
+            for p in saved:
+                run_sql(conn,
+                    "INSERT INTO client_spare_invoices(client_id, filename, file_path, uploaded_at) VALUES (?,?,?,?)",
+                    [client_id, os.path.basename(p), p, now]
+                )
+            st.success(f"✅ Caricate {len(saved)} fatture ricambi."); st.rerun()
+        if u2.button("📎 Carica Vendite Ricambi", key="spsale_btn"):
+            folder = os.path.join(UPLOADS, "clients", str(client_id), "spares", "sales")
+            os.makedirs(folder, exist_ok=True)
+            saved = _save_uploaded_files(sale_files, folder, f"spsale_{client_id}")
+            now = dt.datetime.now().isoformat(timespec="seconds")
+            for p in saved:
+                run_sql(conn,
+                    "INSERT INTO client_spare_sales(client_id, filename, file_path, uploaded_at) VALUES (?,?,?,?)",
+                    [client_id, os.path.basename(p), p, now]
+                )
+            st.success(f"✅ Caricate {len(saved)} vendite ricambi."); st.rerun()
+
+        df_spinv = pd.read_sql_query("SELECT filename, uploaded_at FROM client_spare_invoices WHERE client_id=? ORDER BY id DESC",
+                                     conn, params=[client_id])
+        df_spsale = pd.read_sql_query("SELECT filename, uploaded_at FROM client_spare_sales WHERE client_id=? ORDER BY id DESC",
+                                      conn, params=[client_id])
+        if not df_spinv.empty:
+            st.markdown("**Fatture Ricambi**"); st.dataframe(df_spinv, use_container_width=True)
+        if not df_spsale.empty:
+            st.markdown("**Vendite Ricambi**"); st.dataframe(df_spsale, use_container_width=True)
+
+    # =============== SERVIZI IN GARANZIA ===============
+    st.markdown("### SERVIZI IN GARANZIA — Richieste")
+    with card("no-bg"):
+        gw1, gw2 = st.columns(2)
+        w_mod = gw1.text_input("Modello barca", key="wr_mod")
+        w_hull = gw2.text_input("Hull n.", key="wr_hull")
+        w_desc = st.text_area("Descrizione", key="wr_desc")
+        g2a, g2b, g2c = st.columns(3)
+        w_brand = g2a.text_input("Marchio", key="wr_brand")
+        w_ser   = g2b.text_input("Articolo / N. Serie", key="wr_ser")
+        w_state = g2c.selectbox("Stato", ["Aperta","In lavorazione","Evaso"], key="wr_state")
+        w_note  = st.text_input("Note", key="wr_note")
+
+        if st.button("➕ Aggiungi Richiesta Garanzia", key="wr_add"):
+            now = dt.datetime.now().isoformat(timespec="seconds")
+            run_sql(conn,
+                "INSERT INTO client_warranty_requests(client_id, created_at, modello, hull, descrizione, brand, seriale, stato, note) "
+                "VALUES (?,?,?,?,?,?,?,?,?)",
+                [client_id, now, w_mod, w_hull, w_desc, w_brand, w_ser, w_state, w_note]
+            )
+            st.success("✅ Richiesta garanzia aggiunta."); st.rerun()
+
+        df_wr = pd.read_sql_query(
+            "SELECT created_at AS data, modello, hull, brand, seriale, stato, descrizione "
+            "FROM client_warranty_requests WHERE client_id=? ORDER BY id DESC",
+            conn, params=[client_id]
+        )
+        if not df_wr.empty:
+            st.dataframe(df_wr, use_container_width=True)
+
+    st.markdown("### SERVIZI IN GARANZIA — Fatture & Materiali")
+    with card("no-bg"):
+        gup1, gup2 = st.columns(2)
+        winv_files = gup1.file_uploader("Fatture Garanzia (PDF, Word, PNG, JPG)",
+                                        type=["pdf","doc","docx","png","jpg","jpeg"],
+                                        accept_multiple_files=True, key="winv_files")
+        if gup1.button("📎 Carica Fatture Garanzia", key="winv_btn"):
+            folder = os.path.join(UPLOADS, "clients", str(client_id), "warranty", "invoices")
+            os.makedirs(folder, exist_ok=True)
+            saved = _save_uploaded_files(winv_files, folder, f"winv_{client_id}")
+            now = dt.datetime.now().isoformat(timespec="seconds")
+            for p in saved:
+                run_sql(conn,
+                    "INSERT INTO client_warranty_invoices(client_id, filename, file_path, uploaded_at) VALUES (?,?,?,?)",
+                    [client_id, os.path.basename(p), p, now]
+                )
+            st.success(f"✅ Caricate {len(saved)} fatture garanzia."); st.rerun()
+
+        # Materiali forniti
+        m1, m2, m3, m4 = st.columns([3,1,1,2])
+        m_desc = m1.text_input("Materiale / Descrizione", key="mat_desc")
+        m_qta  = m2.number_input("Q.tà", min_value=0.0, step=1.0, key="mat_qta")
+        m_cost = m3.number_input("Costo €", min_value=0.0, step=10.0, key="mat_cost")
+        m_note = m4.text_input("Note", key="mat_note")
+        if st.button("➕ Aggiungi Materiale", key="mat_add"):
+            now = dt.datetime.now().isoformat(timespec="seconds")
+            run_sql(conn,
+                "INSERT INTO client_warranty_materials(client_id, created_at, descrizione, qta, costo, note) VALUES (?,?,?,?,?,?)",
+                [client_id, now, m_desc, float(m_qta), float(m_cost), m_note]
+            )
+            st.success("✅ Materiale aggiunto."); st.rerun()
+
+        df_m = pd.read_sql_query(
+            "SELECT created_at AS data, descrizione, qta, costo, note FROM client_warranty_materials WHERE client_id=? ORDER BY id DESC",
+            conn, params=[client_id]
+        )
+        if not df_m.empty:
+            st.dataframe(df_m, use_container_width=True)
+            tot_m = float(df_m["costo"].fillna(0).sum())
+            st.caption(f"**Totale materiali:** € {tot_m:,.2f}".replace(",", "X").replace(".", ",").replace("X","."))
+
+    st.markdown("### SERVIZI IN GARANZIA — Trasferte")
+    with card("no-bg"):
+        t1, t2 = st.columns(2)
+        wf = t1.date_input("Dal", value=dt.date.today(), min_value=DATE_MIN_1958, max_value=DATE_MAX_FAR, key="gtr_from")
+        wt = t2.date_input("Al",  value=dt.date.today(), min_value=DATE_MIN_1958, max_value=DATE_MAX_FAR, key="gtr_to")
+        tt1, tt2 = st.columns(2)
+        wm = tt1.text_input("Modello barca", key="gtr_mod")
+        wh = tt2.text_input("Hull n.", key="gtr_hull")
+        wloc = st.text_input("Locazione", key="gtr_loc")
+        wcost = st.number_input("Costo trasferta (€)", min_value=0.0, step=50.0, key="gtr_cost")
+        if st.button("➕ Aggiungi Trasferta (Garanzia)", key="gtr_add"):
+            run_sql(conn,
+                "INSERT INTO client_trips(client_id, date_from, date_to, modello, hull, locazione, costo, in_warranty) VALUES (?,?,?,?,?,?,?,1)",
+                [client_id, str(wf), str(wt), wm, wh, wloc, float(wcost)]
+            )
+            st.success("✅ Trasferta garanzia aggiunta."); st.rerun()
+
+        df_gtr = pd.read_sql_query(
+            "SELECT date_from AS 'Dal', date_to AS 'Al', modello, hull, locazione, costo FROM client_trips "
+            "WHERE client_id=? AND in_warranty=1 ORDER BY id DESC",
+            conn, params=[client_id]
+        )
+        if not df_gtr.empty:
+            st.dataframe(df_gtr, use_container_width=True)
+            tot_t = float(df_gtr["costo"].fillna(0).sum())
+            st.caption(f"**Totale trasferte (garanzia):** € {tot_t:,.2f}".replace(",", "X").replace(".", ",").replace("X","."))
+
+    # =============== RESOCONTO ===============
+    st.markdown("### RESOCONTO")
+    with card("no-bg"):
+        # conteggi e totali rapidi
+        n_boats = pd.read_sql_query("SELECT COUNT(*) AS n FROM client_boats WHERE client_id=?", conn, params=[client_id]).iloc[0]["n"]
+        n_sr_open = pd.read_sql_query("SELECT COUNT(*) AS n FROM client_spare_requests WHERE client_id=? AND stato!='Evaso'", conn, params=[client_id]).iloc[0]["n"]
+        n_wr_open = pd.read_sql_query("SELECT COUNT(*) AS n FROM client_warranty_requests WHERE client_id=? AND stato!='Evaso'", conn, params=[client_id]).iloc[0]["n"]
+        tot_mat = pd.read_sql_query("SELECT COALESCE(SUM(costo),0) AS t FROM client_warranty_materials WHERE client_id=?", conn, params=[client_id]).iloc[0]["t"]
+        tot_trips = pd.read_sql_query("SELECT COALESCE(SUM(costo),0) AS t FROM client_trips WHERE client_id=? AND in_warranty=1", conn, params=[client_id]).iloc[0]["t"]
+
+        c = st.columns(5)
+        c[0].metric("Barche acquistate", int(n_boats))
+        c[1].metric("Ricambi aperti", int(n_sr_open))
+        c[2].metric("Servizi in garanzia aperti", int(n_wr_open))
+        c[3].metric("Totale materiali (gar.)", f"€ {float(tot_mat):,.2f}".replace(",", "X").replace(".", ",").replace("X","."))
+        c[4].metric("Totale trasferte (gar.)", f"€ {float(tot_trips):,.2f}".replace(",", "X").replace(".", ",").replace("X","."))
 
 def section_dealer(conn):
     st.subheader("DEALER")
