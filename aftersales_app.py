@@ -916,7 +916,6 @@ def section_clienti(conn):
         if not df_tr.empty:
             st.dataframe(df_tr, use_container_width=True)
 
-
 def section_dealer(conn):
     st.subheader("DEALER")
     with card():
